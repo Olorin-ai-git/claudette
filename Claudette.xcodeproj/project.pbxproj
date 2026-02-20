@@ -1,0 +1,508 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000010000000000000001 /* ClaudetteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000001 /* ClaudetteApp.swift */; };
+		A10000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000002 /* ContentView.swift */; };
+		A10000010000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000003 /* Assets.xcassets */; };
+		A10000010000000000000004 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000004 /* Preview Assets.xcassets */; };
+		B10000010000000000000001 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = B10000030000000000000001 /* Citadel */; };
+		B10000010000000000000002 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B10000030000000000000002 /* SwiftTerm */; };
+		C10000010000000000000001 /* Configuration.plist in Resources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000001 /* Configuration.plist */; };
+		C10000010000000000000002 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000002 /* AppConfiguration.swift */; };
+		C10000010000000000000003 /* LoggerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000003 /* LoggerFactory.swift */; };
+		C10000010000000000000004 /* UIColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000004 /* UIColor+Hex.swift */; };
+		C10000010000000000000005 /* AuthMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000005 /* AuthMethod.swift */; };
+		C10000010000000000000006 /* ConnectionSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000006 /* ConnectionSettings.swift */; };
+		C10000010000000000000007 /* ConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000007 /* ConnectionState.swift */; };
+		C10000010000000000000008 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000008 /* KeychainService.swift */; };
+		C10000010000000000000009 /* SSHConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000009 /* SSHConnectionManager.swift */; };
+		C1000001000000000000000A /* ConnectionSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000A /* ConnectionSettingsViewModel.swift */; };
+		C1000001000000000000000B /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000B /* SessionViewModel.swift */; };
+		C1000001000000000000000C /* ConnectionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000C /* ConnectionSettingsView.swift */; };
+		C1000001000000000000000D /* TerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000D /* TerminalContainerView.swift */; };
+		C1000001000000000000000E /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000E /* SessionView.swift */; };
+		C1000001000000000000000F /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000F /* SpeechRecognitionService.swift */; };
+		C10000010000000000000010 /* ProjectEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000010 /* ProjectEntry.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000020000000000000001 /* ClaudetteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudetteApp.swift; sourceTree = "<group>"; };
+		A10000020000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A10000020000000000000003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A10000020000000000000004 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		A10000020000000000000010 /* Claudette.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Claudette.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10000020000000000000001 /* Configuration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Configuration.plist; sourceTree = "<group>"; };
+		C10000020000000000000002 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		C10000020000000000000003 /* LoggerFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerFactory.swift; sourceTree = "<group>"; };
+		C10000020000000000000004 /* UIColor+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Hex.swift"; sourceTree = "<group>"; };
+		C10000020000000000000005 /* AuthMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthMethod.swift; sourceTree = "<group>"; };
+		C10000020000000000000006 /* ConnectionSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSettings.swift; sourceTree = "<group>"; };
+		C10000020000000000000007 /* ConnectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionState.swift; sourceTree = "<group>"; };
+		C10000020000000000000008 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		C10000020000000000000009 /* SSHConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnectionManager.swift; sourceTree = "<group>"; };
+		C1000002000000000000000A /* ConnectionSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSettingsViewModel.swift; sourceTree = "<group>"; };
+		C1000002000000000000000B /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
+		C1000002000000000000000C /* ConnectionSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSettingsView.swift; sourceTree = "<group>"; };
+		C1000002000000000000000D /* TerminalContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainerView.swift; sourceTree = "<group>"; };
+		C1000002000000000000000E /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
+		C1000002000000000000000F /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		C10000020000000000000010 /* ProjectEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEntry.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000030000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000010000000000000001 /* Citadel in Frameworks */,
+				B10000010000000000000002 /* SwiftTerm in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000040000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A10000040000000000000002 /* Claudette */,
+				A10000040000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000040000000000000002 /* Claudette */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000001 /* ClaudetteApp.swift */,
+				A10000020000000000000002 /* ContentView.swift */,
+				C10000020000000000000001 /* Configuration.plist */,
+				C10000030000000000000001 /* Config */,
+				C10000030000000000000002 /* Extensions */,
+				C10000030000000000000003 /* Models */,
+				C10000030000000000000004 /* Services */,
+				C10000030000000000000005 /* ViewModels */,
+				C10000030000000000000006 /* Views */,
+				A10000020000000000000003 /* Assets.xcassets */,
+				A10000040000000000000003 /* Preview Content */,
+			);
+			path = Claudette;
+			sourceTree = "<group>";
+		};
+		A10000040000000000000003 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000004 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A10000040000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000010 /* Claudette.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C10000030000000000000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C10000020000000000000002 /* AppConfiguration.swift */,
+				C10000020000000000000003 /* LoggerFactory.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		C10000030000000000000002 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				C10000020000000000000004 /* UIColor+Hex.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		C10000030000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C10000020000000000000005 /* AuthMethod.swift */,
+				C10000020000000000000006 /* ConnectionSettings.swift */,
+				C10000020000000000000007 /* ConnectionState.swift */,
+				C10000020000000000000010 /* ProjectEntry.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C10000030000000000000004 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C10000020000000000000008 /* KeychainService.swift */,
+				C10000020000000000000009 /* SSHConnectionManager.swift */,
+				C1000002000000000000000F /* SpeechRecognitionService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		C10000030000000000000005 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				C1000002000000000000000A /* ConnectionSettingsViewModel.swift */,
+				C1000002000000000000000B /* SessionViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		C10000030000000000000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C1000002000000000000000C /* ConnectionSettingsView.swift */,
+				C1000002000000000000000D /* TerminalContainerView.swift */,
+				C1000002000000000000000E /* SessionView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000050000000000000001 /* Claudette */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000070000000000000003 /* Build configuration list for PBXNativeTarget "Claudette" */;
+			buildPhases = (
+				A10000060000000000000001 /* Sources */,
+				A10000030000000000000001 /* Frameworks */,
+				A10000060000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Claudette;
+			packageProductDependencies = (
+				B10000030000000000000001 /* Citadel */,
+				B10000030000000000000002 /* SwiftTerm */,
+			);
+			productName = Claudette;
+			productReference = A10000020000000000000010 /* Claudette.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000080000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					A10000050000000000000001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = A10000070000000000000001 /* Build configuration list for PBXProject "Claudette" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A10000040000000000000001;
+			packageReferences = (
+				B10000020000000000000001 /* XCRemoteSwiftPackageReference "Citadel" */,
+				B10000020000000000000002 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+			);
+			productRefGroup = A10000040000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000050000000000000001 /* Claudette */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000060000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000004 /* Preview Assets.xcassets in Resources */,
+				A10000010000000000000003 /* Assets.xcassets in Resources */,
+				C10000010000000000000001 /* Configuration.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000060000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000002 /* ContentView.swift in Sources */,
+				A10000010000000000000001 /* ClaudetteApp.swift in Sources */,
+				C10000010000000000000002 /* AppConfiguration.swift in Sources */,
+				C10000010000000000000003 /* LoggerFactory.swift in Sources */,
+				C10000010000000000000004 /* UIColor+Hex.swift in Sources */,
+				C10000010000000000000005 /* AuthMethod.swift in Sources */,
+				C10000010000000000000006 /* ConnectionSettings.swift in Sources */,
+				C10000010000000000000007 /* ConnectionState.swift in Sources */,
+				C10000010000000000000008 /* KeychainService.swift in Sources */,
+				C10000010000000000000009 /* SSHConnectionManager.swift in Sources */,
+				C1000001000000000000000A /* ConnectionSettingsViewModel.swift in Sources */,
+				C1000001000000000000000B /* SessionViewModel.swift in Sources */,
+				C1000001000000000000000C /* ConnectionSettingsView.swift in Sources */,
+				C1000001000000000000000D /* TerminalContainerView.swift in Sources */,
+				C1000001000000000000000E /* SessionView.swift in Sources */,
+				C1000001000000000000000F /* SpeechRecognitionService.swift in Sources */,
+				C10000010000000000000010 /* ProjectEntry.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A10000090000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A10000090000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A10000090000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Claudette/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudette uses the microphone for voice dictation to send commands to the terminal.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Claudette uses speech recognition to convert your voice into terminal commands.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.olorin.claudette;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A10000090000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Claudette/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudette uses the microphone for voice dictation to send commands to the terminal.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Claudette uses speech recognition to convert your voice into terminal commands.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.olorin.claudette;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000070000000000000001 /* Build configuration list for PBXProject "Claudette" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000090000000000000001 /* Debug */,
+				A10000090000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000070000000000000003 /* Build configuration list for PBXNativeTarget "Claudette" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000090000000000000003 /* Debug */,
+				A10000090000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B10000020000000000000001 /* XCRemoteSwiftPackageReference "Citadel" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orlandos-nl/Citadel.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.12.0;
+			};
+		};
+		B10000020000000000000002 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.10.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B10000030000000000000001 /* Citadel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000020000000000000001 /* XCRemoteSwiftPackageReference "Citadel" */;
+			productName = Citadel;
+		};
+		B10000030000000000000002 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000020000000000000002 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = A10000080000000000000001 /* Project object */;
+}
