@@ -14,7 +14,9 @@ struct ContentView: View {
     @State private var showingProfileEditor = false
     @State private var editingProfile: ServerProfile?
     @State private var showingFileBrowser = false
+    @State private var showingPathInput = false
     @State private var selectedProfile: ServerProfile?
+    @State private var manualPath: String = ""
 
     init(
         config: AppConfiguration,
@@ -45,7 +47,12 @@ struct ContentView: View {
                 viewModel: profileListViewModel,
                 onSelectProfile: { profile in
                     selectedProfile = profile
-                    showingFileBrowser = true
+                    if let lastPath = profile.lastProjectPath, !lastPath.isEmpty {
+                        handleFolderSelected(profile: profile, path: lastPath)
+                    } else {
+                        manualPath = ""
+                        showingPathInput = true
+                    }
                 },
                 onEditProfile: { profile in
                     editingProfile = profile
@@ -95,25 +102,32 @@ struct ContentView: View {
                 }
             )
         }
+        .alert("Project Path", isPresented: $showingPathInput) {
+            TextField("/Users/username/project", text: $manualPath)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+            Button("Connect") {
+                if let profile = selectedProfile, !manualPath.isEmpty {
+                    handleFolderSelected(profile: profile, path: manualPath)
+                }
+            }
+            Button("Browse Server...", role: nil) {
+                showingFileBrowser = true
+            }
+            Button("Cancel", role: .cancel) {
+                selectedProfile = nil
+            }
+        } message: {
+            Text("Enter the absolute path to your project folder, or browse the server.")
+        }
         .fullScreenCover(isPresented: $showingFileBrowser, onDismiss: {
             // Clean up if user cancelled
         }) {
             if let profile = selectedProfile {
-                let hostKeyValidator = TOFUHostKeyValidator(
+                FileBrowserWrapper(
+                    profile: profile,
+                    keychainService: keychainService,
                     hostKeyStore: hostKeyStore,
-                    logger: LoggerFactory.logger(category: "HostKeyValidator")
-                )
-
-                RemoteFileBrowserView(
-                    viewModel: RemoteFileBrowserViewModel(
-                        profile: profile,
-                        fileBrowserService: RemoteFileBrowserService(
-                            logger: LoggerFactory.logger(category: "FileBrowser")
-                        ),
-                        keychainService: keychainService,
-                        hostKeyValidator: hostKeyValidator,
-                        logger: LoggerFactory.logger(category: "FileBrowserVM")
-                    ),
                     onSelectFolder: { path in
                         showingFileBrowser = false
                         handleFolderSelected(profile: profile, path: path)
@@ -138,5 +152,52 @@ struct ContentView: View {
 
         let settings = updatedProfile.toConnectionSettings(projectPath: path)
         navigationPath.append(settings)
+    }
+}
+
+private struct FileBrowserWrapper: View {
+    let profile: ServerProfile
+    let keychainService: KeychainServiceProtocol
+    let hostKeyStore: HostKeyStoreProtocol
+    let onSelectFolder: (String) -> Void
+    let onCancel: () -> Void
+
+    @StateObject private var viewModel: RemoteFileBrowserViewModel
+
+    init(
+        profile: ServerProfile,
+        keychainService: KeychainServiceProtocol,
+        hostKeyStore: HostKeyStoreProtocol,
+        onSelectFolder: @escaping (String) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.profile = profile
+        self.keychainService = keychainService
+        self.hostKeyStore = hostKeyStore
+        self.onSelectFolder = onSelectFolder
+        self.onCancel = onCancel
+
+        let hostKeyValidator = TOFUHostKeyValidator(
+            hostKeyStore: hostKeyStore,
+            logger: LoggerFactory.logger(category: "HostKeyValidator")
+        )
+
+        _viewModel = StateObject(wrappedValue: RemoteFileBrowserViewModel(
+            profile: profile,
+            fileBrowserService: RemoteFileBrowserService(
+                logger: LoggerFactory.logger(category: "FileBrowser")
+            ),
+            keychainService: keychainService,
+            hostKeyValidator: hostKeyValidator,
+            logger: LoggerFactory.logger(category: "FileBrowserVM")
+        ))
+    }
+
+    var body: some View {
+        RemoteFileBrowserView(
+            viewModel: viewModel,
+            onSelectFolder: onSelectFolder,
+            onCancel: onCancel
+        )
     }
 }
