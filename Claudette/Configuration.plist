@@ -9,7 +9,7 @@
 		<key>ConnectTimeoutSeconds</key>
 		<integer>30</integer>
 		<key>Command</key>
-		<string>claude</string>
+		<string>claude --continue</string>
 	</dict>
 	<key>Bonjour</key>
 	<dict>
