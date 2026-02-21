@@ -43,26 +43,25 @@ private enum SessionSheet: Identifiable {
 
 struct SessionView: View {
     @ObservedObject var viewModel: SessionViewModel
-    @ObservedObject private var connectionManager: SSHConnectionManager
     let config: AppConfiguration
     @StateObject private var speechService: SpeechRecognitionService
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var keyboardObserver = KeyboardObserver()
     @State private var activeSheet: SessionSheet?
+    @State private var showCopyToast = false
 
     init(viewModel: SessionViewModel, config: AppConfiguration) {
         self.viewModel = viewModel
-        connectionManager = viewModel.connectionManager
         self.config = config
-        let manager = viewModel.connectionManager
         _speechService = StateObject(wrappedValue: SpeechRecognitionService(
             logger: LoggerFactory.logger(category: "Speech"),
-            onTranscriptFinalized: { transcript in
+            onTranscriptFinalized: { [weak viewModel] transcript in
+                guard let viewModel else { return }
                 let textBytes = Array(transcript.utf8)
-                manager.sendToRemote(textBytes[...])
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                viewModel.activeConnectionManager.sendToRemote(textBytes[...])
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak viewModel] in
                     let enter: [UInt8] = [0x0D]
-                    manager.sendToRemote(enter[...])
+                    viewModel?.activeConnectionManager.sendToRemote(enter[...])
                 }
             }
         ))
@@ -75,10 +74,20 @@ struct SessionView: View {
 
             ZStack {
                 VStack(spacing: 0) {
-                    TerminalContainerView(
-                        connectionManager: viewModel.connectionManager,
-                        config: config
-                    )
+                    if viewModel.tabs.count > 1 {
+                        tabBar
+                    }
+
+                    ZStack {
+                        ForEach(viewModel.tabs) { tab in
+                            TerminalContainerView(
+                                connectionManager: tab.connectionManager,
+                                config: config
+                            )
+                            .opacity(tab.id == viewModel.activeTabId ? 1 : 0)
+                            .allowsHitTesting(tab.id == viewModel.activeTabId)
+                        }
+                    }
                     .frame(maxHeight: .infinity)
 
                     if !keyboardUp {
@@ -102,6 +111,32 @@ struct SessionView: View {
                         .padding(.trailing, 16)
                     }
                 }
+
+                // Auth URL banner
+                if viewModel.authInterceptor.detectedURL != nil {
+                    VStack {
+                        authURLBanner
+                        Spacer()
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                // Copy toast
+                if showCopyToast {
+                    VStack {
+                        Text("Session copied to clipboard")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.green.opacity(0.9))
+                            .clipShape(Capsule())
+                        Spacer()
+                    }
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -115,6 +150,15 @@ struct SessionView: View {
                     Text(viewModel.settings.host)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                }
+            }
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewModel.addTab()
+                    }
+                } label: {
+                    Image(systemName: "plus")
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -160,7 +204,7 @@ struct SessionView: View {
                 handleForegroundResume()
             }
         }
-        .onChange(of: connectionManager.connectionState) { _, newState in
+        .onChange(of: viewModel.activeConnectionState) { _, newState in
             if case .connected = newState {
                 viewModel.discoverResourcesIfNeeded()
             }
@@ -224,8 +268,111 @@ struct SessionView: View {
         }
     }
 
+    // MARK: - Tab Bar
+
+    private var tabBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 2) {
+                ForEach(viewModel.tabs) { tab in
+                    tabItem(for: tab)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+        }
+        .background(Color(UIColor.secondarySystemBackground))
+    }
+
+    private func tabItem(for tab: TerminalTab) -> some View {
+        let isActive = tab.id == viewModel.activeTabId
+        let showClose = viewModel.tabs.count > 1
+
+        return HStack(spacing: 6) {
+            Text(tab.label)
+                .font(.caption)
+                .fontWeight(isActive ? .medium : .regular)
+
+            if showClose {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .highPriorityGesture(
+                        TapGesture().onEnded {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                viewModel.closeTab(id: tab.id)
+                            }
+                        }
+                    )
+            }
+        }
+        .padding(.leading, 10)
+        .padding(.trailing, showClose ? 6 : 10)
+        .padding(.vertical, 6)
+        .foregroundStyle(isActive ? .primary : .secondary)
+        .background(isActive ? Color.accentColor.opacity(0.15) : Color(UIColor.tertiarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .onTapGesture {
+            viewModel.selectTab(id: tab.id)
+        }
+    }
+
+    // MARK: - Auth URL Banner
+
+    private var authURLBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "link.badge.plus")
+                .font(.system(size: 16))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Login URL copied")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                Text("Open in Safari to sign in")
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+
+            Spacer()
+
+            Button {
+                if let urlString = viewModel.authInterceptor.detectedURL,
+                   let url = URL(string: urlString)
+                {
+                    UIApplication.shared.open(url)
+                }
+                withAnimation { viewModel.authInterceptor.clearDetectedURL() }
+            } label: {
+                Text("Open")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(.white.opacity(0.2))
+                    .clipShape(Capsule())
+            }
+
+            Button {
+                withAnimation { viewModel.authInterceptor.clearDetectedURL() }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18))
+                    .symbolRenderingMode(.hierarchical)
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.blue.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+    }
+
+    // MARK: - Helpers
+
     private func handleForegroundResume() {
-        switch connectionManager.connectionState {
+        switch viewModel.activeConnectionState {
         case .disconnected, .failed:
             viewModel.reconnect()
         default:
@@ -275,12 +422,24 @@ struct SessionView: View {
             Spacer()
 
             if isConnected {
+                Button {
+                    if viewModel.copySessionToClipboard() {
+                        withAnimation { showCopyToast = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            withAnimation { showCopyToast = false }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "doc.on.clipboard")
+                }
+                .font(.caption2)
+
                 Button("Disconnect") { viewModel.disconnect() }
                     .font(.caption2)
                     .foregroundStyle(.red)
             }
 
-            if case .failed = connectionManager.connectionState {
+            if case .failed = viewModel.activeConnectionState {
                 Button("Retry") { viewModel.connect() }
                     .font(.caption2)
             }
@@ -290,14 +449,14 @@ struct SessionView: View {
     }
 
     private var isConnected: Bool {
-        if case .connected = connectionManager.connectionState {
+        if case .connected = viewModel.activeConnectionState {
             return true
         }
         return false
     }
 
     private var statusColor: Color {
-        switch connectionManager.connectionState {
+        switch viewModel.activeConnectionState {
         case .disconnected: return .gray
         case .connecting: return .yellow
         case .connected: return .green
@@ -307,7 +466,7 @@ struct SessionView: View {
     }
 
     private var statusText: String {
-        switch connectionManager.connectionState {
+        switch viewModel.activeConnectionState {
         case .disconnected: return "Disconnected"
         case .connecting: return "Connecting..."
         case .connected: return "Connected"

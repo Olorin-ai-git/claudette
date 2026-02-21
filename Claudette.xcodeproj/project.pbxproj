@@ -75,6 +75,8 @@
 		F1000001000000000000001B /* SnippetDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001B /* SnippetDrawerView.swift */; };
 		F1000001000000000000001C /* SnippetEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001C /* SnippetEditorView.swift */; };
 		F1000001000000000000001D /* DefaultSnippets.json in Resources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001D /* DefaultSnippets.json */; };
+		G10000010000000000000001 /* TerminalTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = G10000020000000000000001 /* TerminalTab.swift */; };
+		G10000010000000000000002 /* AuthURLInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = G10000020000000000000002 /* AuthURLInterceptor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -145,6 +147,8 @@
 		F1000002000000000000001B /* SnippetDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetDrawerView.swift; sourceTree = "<group>"; };
 		F1000002000000000000001C /* SnippetEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetEditorView.swift; sourceTree = "<group>"; };
 		F1000002000000000000001D /* DefaultSnippets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DefaultSnippets.json; sourceTree = "<group>"; };
+		G10000020000000000000001 /* TerminalTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTab.swift; sourceTree = "<group>"; };
+		G10000020000000000000002 /* AuthURLInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthURLInterceptor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -237,6 +241,7 @@
 				D10000020000000000000004 /* RemoteFileEntry.swift */,
 				D10000020000000000000001 /* ServerProfile.swift */,
 				F10000020000000000000006 /* SnippetCategory.swift */,
+				G10000020000000000000001 /* TerminalTab.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -244,6 +249,7 @@
 		C10000030000000000000004 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				G10000020000000000000002 /* AuthURLInterceptor.swift */,
 				F10000020000000000000007 /* AgentActivityParser.swift */,
 				D1000002000000000000000A /* BonjourDiscoveryService.swift */,
 				F10000020000000000000008 /* ClaudeResourceDiscoveryService.swift */,
@@ -455,6 +461,8 @@
 				F1000001000000000000001A /* RemoteFileEditorView.swift in Sources */,
 				F1000001000000000000001B /* SnippetDrawerView.swift in Sources */,
 				F1000001000000000000001C /* SnippetEditorView.swift in Sources */,
+				G10000010000000000000001 /* TerminalTab.swift in Sources */,
+				G10000010000000000000002 /* AuthURLInterceptor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

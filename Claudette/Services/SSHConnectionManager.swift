@@ -37,6 +37,10 @@ final class SSHConnectionManager: ObservableObject {
         terminalView = view
     }
 
+    func getTerminalContent() -> String {
+        terminalView?.getSessionContent() ?? ""
+    }
+
     func connect(
         settings: ConnectionSettings,
         credential: String,

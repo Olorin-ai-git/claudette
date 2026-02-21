@@ -50,11 +50,15 @@ final class ClaudetteTerminalView: TerminalView {
             let line = String(lineBuffer[lineBuffer.startIndex ..< nlIndex])
             lineBuffer = String(lineBuffer[lineBuffer.index(after: nlIndex)...])
             outputLines.append(line)
-            // Keep last 500 lines
-            if outputLines.count > 500 {
-                outputLines.removeFirst(outputLines.count - 500)
+            if outputLines.count > 5000 {
+                outputLines.removeFirst(outputLines.count - 5000)
             }
         }
+    }
+
+    /// Returns the full terminal output buffer as a single string.
+    func getSessionContent() -> String {
+        outputLines.joined(separator: "\n")
     }
 
     // MARK: - Block Select

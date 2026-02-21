@@ -1,8 +1,10 @@
 import Citadel
+import Combine
 import CryptoKit
 import Foundation
 import NIOSSH
 import os
+import UIKit
 
 struct HostKeyAlertState: Identifiable, Equatable {
     let id = UUID()
@@ -23,11 +25,20 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
     let profile: ServerProfile
     let agentParser: AgentActivityParser
     let permissionService: PermissionNotificationService
+    let authInterceptor: AuthURLInterceptor
+
+    // Tab Management
+    @Published private(set) var tabs: [TerminalTab] = []
+    @Published var activeTabId: UUID = .init()
+    @Published private(set) var activeConnectionState: ConnectionState = .disconnected
+    private var activeStateCancellable: AnyCancellable?
+    private var tabCounter: Int = 1
 
     @Published var hostKeyAlert: HostKeyAlertState?
     @Published private(set) var claudeResources: [ClaudeResource] = []
     @Published private(set) var isDiscoveringResources: Bool = false
 
+    private let config: AppConfiguration
     private let keychainService: KeychainServiceProtocol
     private let hostKeyStore: HostKeyStoreProtocol
     private let hostKeyValidator: TOFUHostKeyValidator
@@ -42,10 +53,15 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
         hostKeyStore
     }
 
+    var activeConnectionManager: SSHConnectionManager {
+        tabs.first(where: { $0.id == activeTabId })?.connectionManager ?? connectionManager
+    }
+
     init(
         settings: ConnectionSettings,
         profile: ServerProfile,
         connectionManager: SSHConnectionManager,
+        config: AppConfiguration,
         keychainService: KeychainServiceProtocol,
         hostKeyStore: HostKeyStoreProtocol,
         hostKeyValidator: TOFUHostKeyValidator,
@@ -54,6 +70,7 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
         self.settings = settings
         self.profile = profile
         self.connectionManager = connectionManager
+        self.config = config
         self.keychainService = keychainService
         self.hostKeyStore = hostKeyStore
         self.hostKeyValidator = hostKeyValidator
@@ -69,19 +86,116 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
         )
         permissionService = notifications
 
-        connectionManager.outputInterceptor = { [weak parser, weak notifications] bytes in
+        let auth = AuthURLInterceptor(
+            logger: LoggerFactory.logger(category: "AuthURL")
+        )
+        authInterceptor = auth
+
+        connectionManager.outputInterceptor = { [weak parser, weak notifications, weak auth] bytes in
             Task { @MainActor in
                 parser?.processOutput(bytes)
                 notifications?.processOutput(bytes)
+                auth?.processOutput(bytes)
             }
         }
 
         hostKeyValidator.delegate = self
+
+        let firstTab = TerminalTab(connectionManager: connectionManager, label: "Terminal 1")
+        tabs = [firstTab]
+        activeTabId = firstTab.id
+        observeActiveTab()
     }
+
+    // MARK: - Tab Management
+
+    func addTab() {
+        tabCounter += 1
+        let newManager = SSHConnectionManager(
+            config: config,
+            keychainService: keychainService,
+            logger: LoggerFactory.logger(category: "SSHConnection-\(tabCounter)")
+        )
+        wireInterceptor(on: newManager)
+
+        let tab = TerminalTab(connectionManager: newManager, label: "Terminal \(tabCounter)")
+        tabs.append(tab)
+        activeTabId = tab.id
+        observeActiveTab()
+        connectTab(tab)
+    }
+
+    func closeTab(id: UUID) {
+        guard tabs.count > 1 else { return }
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+
+        tabs[index].connectionManager.disconnect()
+        tabs.remove(at: index)
+
+        if activeTabId == id {
+            let newIndex = min(index, tabs.count - 1)
+            activeTabId = tabs[newIndex].id
+        }
+
+        observeActiveTab()
+    }
+
+    func selectTab(id: UUID) {
+        guard id != activeTabId else { return }
+        activeTabId = id
+        observeActiveTab()
+    }
+
+    private func connectTab(_ tab: TerminalTab) {
+        let credential: String
+        switch settings.authMethod {
+        case .password:
+            credential = keychainService.retrievePassword(profileId: profile.id) ?? ""
+        case .generatedKey, .importedKey:
+            credential = ""
+        }
+
+        let validator = hostKeyValidator.makeValidator(host: settings.host, port: settings.port)
+
+        tab.connectionManager.connect(
+            settings: settings,
+            credential: credential,
+            hostKeyValidator: validator,
+            profileId: tab.id
+        )
+    }
+
+    private func wireInterceptor(on manager: SSHConnectionManager) {
+        let parser = agentParser
+        let notifications = permissionService
+        let auth = authInterceptor
+        manager.outputInterceptor = { [weak parser, weak notifications, weak auth] bytes in
+            Task { @MainActor in
+                parser?.processOutput(bytes)
+                notifications?.processOutput(bytes)
+                auth?.processOutput(bytes)
+            }
+        }
+    }
+
+    private func observeActiveTab() {
+        activeStateCancellable?.cancel()
+        guard let tab = tabs.first(where: { $0.id == activeTabId }) else { return }
+        activeConnectionState = tab.connectionManager.connectionState
+        activeStateCancellable = tab.connectionManager.$connectionState
+            .receive(on: RunLoop.main)
+            .sink { [weak self] state in
+                self?.activeConnectionState = state
+            }
+    }
+
+    // MARK: - Connection Lifecycle
 
     func connect() {
         Task { await permissionService.requestAuthorization() }
         agentParser.reset()
+
+        guard let firstTab = tabs.first else { return }
 
         let credential: String
         switch settings.authMethod {
@@ -95,7 +209,7 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
 
         let hostForLog = settings.host
         logger.info("Initiating connection to \(hostForLog, privacy: .public)")
-        connectionManager.connect(
+        firstTab.connectionManager.connect(
             settings: settings,
             credential: credential,
             hostKeyValidator: validator,
@@ -106,22 +220,40 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
     func reconnect() {
         let host = settings.host
         logger.info("Attempting reconnect to \(host, privacy: .public)")
-        connectionManager.reconnect()
+        for tab in tabs {
+            switch tab.connectionManager.connectionState {
+            case .disconnected, .failed:
+                tab.connectionManager.reconnect()
+            default:
+                break
+            }
+        }
     }
 
     func disconnect() {
         let hostForLog = settings.host
         logger.info("User requested disconnect from \(hostForLog, privacy: .public)")
-        connectionManager.disconnect()
+        for tab in tabs {
+            tab.connectionManager.disconnect()
+        }
     }
 
     func sendSnippet(_ command: String) {
         let textBytes = Array((command + " ").utf8)
-        connectionManager.sendToRemote(textBytes[...])
+        activeConnectionManager.sendToRemote(textBytes[...])
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
             let enter: [UInt8] = [0x0D]
-            self?.connectionManager.sendToRemote(enter[...])
+            self?.activeConnectionManager.sendToRemote(enter[...])
         }
+    }
+
+    /// Copies the active terminal's output buffer to the iPhone clipboard.
+    func copySessionToClipboard() -> Bool {
+        let content = activeConnectionManager.getTerminalContent()
+        guard !content.isEmpty else { return false }
+        UIPasteboard.general.string = content
+        logger.info("Session buffer copied to clipboard")
+        return true
     }
 
     // MARK: - Resource Discovery

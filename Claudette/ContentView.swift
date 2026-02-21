@@ -160,6 +160,7 @@ struct ContentView: View {
             settings: settings,
             profile: updatedProfile,
             connectionManager: connectionManager,
+            config: config,
             keychainService: keychainService,
             hostKeyStore: hostKeyStore,
             hostKeyValidator: hostKeyValidator,
