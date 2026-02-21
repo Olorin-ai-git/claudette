@@ -1,0 +1,86 @@
+[
+  {
+    "id": "00000000-0001-0000-0000-000000000001",
+    "label": "Compact Context",
+    "command": "/compact",
+    "category": "Claude Commands",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000002",
+    "label": "Show Cost",
+    "command": "/cost",
+    "category": "Claude Commands",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000003",
+    "label": "Clear Context",
+    "command": "/clear",
+    "category": "Claude Commands",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000004",
+    "label": "Show Help",
+    "command": "/help",
+    "category": "Claude Commands",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000005",
+    "label": "Init Project",
+    "command": "/init",
+    "category": "Claude Commands",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000006",
+    "label": "Review PR",
+    "command": "/review",
+    "category": "Claude Commands",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000007",
+    "label": "Fix Build Errors",
+    "command": "Fix all build errors and warnings",
+    "category": "Debugging",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000008",
+    "label": "Run Tests",
+    "command": "Run the test suite and fix any failing tests",
+    "category": "Debugging",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000009",
+    "label": "Git Status",
+    "command": "Show me git status and recent changes",
+    "category": "Git",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000010",
+    "label": "Commit Changes",
+    "command": "/commit",
+    "category": "Git",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000011",
+    "label": "Refactor Selection",
+    "command": "Refactor this code to improve readability and maintainability",
+    "category": "Refactoring",
+    "isBuiltIn": true
+  },
+  {
+    "id": "00000000-0001-0000-0000-000000000012",
+    "label": "Add Types",
+    "command": "Add proper type annotations to improve type safety",
+    "category": "Refactoring",
+    "isBuiltIn": true
+  }
+]

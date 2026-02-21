@@ -1,5 +1,6 @@
 import Citadel
 import Foundation
+import NIOCore
 import NIOSSH
 import os
 
@@ -116,6 +117,47 @@ final class RemoteFileBrowserService: ObservableObject {
         return "/"
     }
 
+    func readFile(atPath path: String) async throws -> Data {
+        guard let sftp = sftpClient else {
+            throw RemoteFileBrowserError.notConnected
+        }
+
+        let buffer = try await sftp.withFile(filePath: path, flags: .read) { file in
+            try await file.readAll()
+        }
+
+        guard let data = buffer.getData(at: 0, length: buffer.readableBytes) else {
+            throw RemoteFileBrowserError.readFailed
+        }
+
+        logger.info("Read file: \(path, privacy: .public) (\(data.count) bytes)")
+        return data
+    }
+
+    func writeFile(data: Data, atPath path: String) async throws {
+        guard let sftp = sftpClient else {
+            throw RemoteFileBrowserError.notConnected
+        }
+
+        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        try await sftp.withFile(filePath: path, flags: [.write, .create, .truncate]) { file in
+            try await file.write(buffer)
+        }
+
+        logger.info("Wrote file: \(path, privacy: .public) (\(data.count) bytes)")
+    }
+
+    func fileExists(atPath path: String) async -> Bool {
+        guard let sftp = sftpClient else { return false }
+        do {
+            _ = try await sftp.getAttributes(at: path)
+            return true
+        } catch {
+            return false
+        }
+    }
+
     func disconnect() {
         Task {
             try? await client?.close()
@@ -129,11 +171,17 @@ final class RemoteFileBrowserService: ObservableObject {
 
 enum RemoteFileBrowserError: LocalizedError {
     case notConnected
+    case readFailed
+    case fileTooLarge(size: UInt64, maxSize: Int)
 
     var errorDescription: String? {
         switch self {
         case .notConnected:
             return "Not connected to remote server"
+        case .readFailed:
+            return "Failed to read file data"
+        case let .fileTooLarge(size, maxSize):
+            return "File too large (\(size) bytes, max \(maxSize))"
         }
     }
 }

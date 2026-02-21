@@ -30,6 +30,13 @@ struct ProfileEditorView: View {
                     bonjourSection
                 }
 
+                Section("Wake-on-LAN") {
+                    TextField("MAC Address (optional)", text: $viewModel.macAddress)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.asciiCapable)
+                }
+
                 Section("Authentication") {
                     Picker("Method", selection: $viewModel.authMethodSelection) {
                         ForEach(ProfileEditorViewModel.AuthMethodSelection.allCases, id: \.self) { method in

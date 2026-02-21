@@ -46,6 +46,35 @@
 		D10000010000000000000012 /* RemoteFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000012 /* RemoteFileBrowserView.swift */; };
 		D10000010000000000000013 /* HostKeyAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000013 /* HostKeyAlertView.swift */; };
 		E10000010000000000000001 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000001 /* SplashView.swift */; };
+		F10000010000000000000001 /* AgentTreeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000001 /* AgentTreeNode.swift */; };
+		F10000010000000000000002 /* ClaudeResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000002 /* ClaudeResource.swift */; };
+		F10000010000000000000003 /* ClaudeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000003 /* ClaudeSettings.swift */; };
+		F10000010000000000000004 /* NetworkStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000004 /* NetworkStatus.swift */; };
+		F10000010000000000000005 /* PromptSnippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000005 /* PromptSnippet.swift */; };
+		F10000010000000000000006 /* SnippetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000006 /* SnippetCategory.swift */; };
+		F10000010000000000000007 /* AgentActivityParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000007 /* AgentActivityParser.swift */; };
+		F10000010000000000000008 /* ClaudeResourceDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000008 /* ClaudeResourceDiscoveryService.swift */; };
+		F10000010000000000000009 /* ClaudeSettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000009 /* ClaudeSettingsService.swift */; };
+		F1000001000000000000000A /* NetworkProbeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000000A /* NetworkProbeService.swift */; };
+		F1000001000000000000000B /* PermissionNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000000B /* PermissionNotificationService.swift */; };
+		F1000001000000000000000C /* SnippetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000000C /* SnippetStore.swift */; };
+		F1000001000000000000000D /* TerminalBlockDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000000D /* TerminalBlockDetector.swift */; };
+		F1000001000000000000000E /* TmuxSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000000E /* TmuxSessionService.swift */; };
+		F1000001000000000000000F /* WakeOnLANService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000000F /* WakeOnLANService.swift */; };
+		F10000010000000000000010 /* RemoteFileEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000010 /* RemoteFileEditorViewModel.swift */; };
+		F10000010000000000000011 /* SnippetDrawerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000011 /* SnippetDrawerViewModel.swift */; };
+		F10000010000000000000012 /* AgentVisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000012 /* AgentVisualizerView.swift */; };
+		F10000010000000000000013 /* ClaudeMDDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000013 /* ClaudeMDDashboardView.swift */; };
+		F10000010000000000000014 /* ClaudeResourcesSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000014 /* ClaudeResourcesSidebarView.swift */; };
+		F10000010000000000000015 /* ClaudetteTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000015 /* ClaudetteTerminalView.swift */; };
+		F10000010000000000000016 /* ConnectionStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000016 /* ConnectionStatusHUDView.swift */; };
+		F10000010000000000000017 /* ExtendedKeyboardAccessoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000017 /* ExtendedKeyboardAccessoryView.swift */; };
+		F10000010000000000000018 /* HookEditorFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000018 /* HookEditorFormView.swift */; };
+		F10000010000000000000019 /* HooksAutomationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000020000000000000019 /* HooksAutomationView.swift */; };
+		F1000001000000000000001A /* RemoteFileEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001A /* RemoteFileEditorView.swift */; };
+		F1000001000000000000001B /* SnippetDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001B /* SnippetDrawerView.swift */; };
+		F1000001000000000000001C /* SnippetEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001C /* SnippetEditorView.swift */; };
+		F1000001000000000000001D /* DefaultSnippets.json in Resources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001D /* DefaultSnippets.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +116,35 @@
 		D10000020000000000000012 /* RemoteFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileBrowserView.swift; sourceTree = "<group>"; };
 		D10000020000000000000013 /* HostKeyAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyAlertView.swift; sourceTree = "<group>"; };
 		E10000020000000000000001 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		F10000020000000000000001 /* AgentTreeNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTreeNode.swift; sourceTree = "<group>"; };
+		F10000020000000000000002 /* ClaudeResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeResource.swift; sourceTree = "<group>"; };
+		F10000020000000000000003 /* ClaudeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeSettings.swift; sourceTree = "<group>"; };
+		F10000020000000000000004 /* NetworkStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatus.swift; sourceTree = "<group>"; };
+		F10000020000000000000005 /* PromptSnippet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptSnippet.swift; sourceTree = "<group>"; };
+		F10000020000000000000006 /* SnippetCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetCategory.swift; sourceTree = "<group>"; };
+		F10000020000000000000007 /* AgentActivityParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentActivityParser.swift; sourceTree = "<group>"; };
+		F10000020000000000000008 /* ClaudeResourceDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeResourceDiscoveryService.swift; sourceTree = "<group>"; };
+		F10000020000000000000009 /* ClaudeSettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeSettingsService.swift; sourceTree = "<group>"; };
+		F1000002000000000000000A /* NetworkProbeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkProbeService.swift; sourceTree = "<group>"; };
+		F1000002000000000000000B /* PermissionNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionNotificationService.swift; sourceTree = "<group>"; };
+		F1000002000000000000000C /* SnippetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetStore.swift; sourceTree = "<group>"; };
+		F1000002000000000000000D /* TerminalBlockDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalBlockDetector.swift; sourceTree = "<group>"; };
+		F1000002000000000000000E /* TmuxSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxSessionService.swift; sourceTree = "<group>"; };
+		F1000002000000000000000F /* WakeOnLANService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeOnLANService.swift; sourceTree = "<group>"; };
+		F10000020000000000000010 /* RemoteFileEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileEditorViewModel.swift; sourceTree = "<group>"; };
+		F10000020000000000000011 /* SnippetDrawerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetDrawerViewModel.swift; sourceTree = "<group>"; };
+		F10000020000000000000012 /* AgentVisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentVisualizerView.swift; sourceTree = "<group>"; };
+		F10000020000000000000013 /* ClaudeMDDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeMDDashboardView.swift; sourceTree = "<group>"; };
+		F10000020000000000000014 /* ClaudeResourcesSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeResourcesSidebarView.swift; sourceTree = "<group>"; };
+		F10000020000000000000015 /* ClaudetteTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudetteTerminalView.swift; sourceTree = "<group>"; };
+		F10000020000000000000016 /* ConnectionStatusHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatusHUDView.swift; sourceTree = "<group>"; };
+		F10000020000000000000017 /* ExtendedKeyboardAccessoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtendedKeyboardAccessoryView.swift; sourceTree = "<group>"; };
+		F10000020000000000000018 /* HookEditorFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookEditorFormView.swift; sourceTree = "<group>"; };
+		F10000020000000000000019 /* HooksAutomationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksAutomationView.swift; sourceTree = "<group>"; };
+		F1000002000000000000001A /* RemoteFileEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileEditorView.swift; sourceTree = "<group>"; };
+		F1000002000000000000001B /* SnippetDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetDrawerView.swift; sourceTree = "<group>"; };
+		F1000002000000000000001C /* SnippetEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetEditorView.swift; sourceTree = "<group>"; };
+		F1000002000000000000001D /* DefaultSnippets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DefaultSnippets.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +180,7 @@
 				C10000030000000000000004 /* Services */,
 				C10000030000000000000005 /* ViewModels */,
 				C10000030000000000000006 /* Views */,
+				F10000030000000000000001 /* Resources */,
 				A10000020000000000000003 /* Assets.xcassets */,
 				A10000040000000000000003 /* Preview Content */,
 			);
@@ -164,14 +223,20 @@
 		C10000030000000000000003 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				F10000020000000000000001 /* AgentTreeNode.swift */,
 				C10000020000000000000005 /* AuthMethod.swift */,
 				D10000020000000000000005 /* BonjourHost.swift */,
+				F10000020000000000000002 /* ClaudeResource.swift */,
+				F10000020000000000000003 /* ClaudeSettings.swift */,
 				C10000020000000000000006 /* ConnectionSettings.swift */,
 				C10000020000000000000007 /* ConnectionState.swift */,
 				D10000020000000000000003 /* HostKeyVerificationResult.swift */,
 				D10000020000000000000002 /* KnownHost.swift */,
+				F10000020000000000000004 /* NetworkStatus.swift */,
+				F10000020000000000000005 /* PromptSnippet.swift */,
 				D10000020000000000000004 /* RemoteFileEntry.swift */,
 				D10000020000000000000001 /* ServerProfile.swift */,
+				F10000020000000000000006 /* SnippetCategory.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -179,15 +244,24 @@
 		C10000030000000000000004 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				F10000020000000000000007 /* AgentActivityParser.swift */,
 				D1000002000000000000000A /* BonjourDiscoveryService.swift */,
+				F10000020000000000000008 /* ClaudeResourceDiscoveryService.swift */,
+				F10000020000000000000009 /* ClaudeSettingsService.swift */,
 				D10000020000000000000007 /* HostKeyStore.swift */,
 				C10000020000000000000008 /* KeychainService.swift */,
+				F1000002000000000000000A /* NetworkProbeService.swift */,
+				F1000002000000000000000B /* PermissionNotificationService.swift */,
 				D10000020000000000000006 /* ProfileStore.swift */,
 				D1000002000000000000000B /* RemoteFileBrowserService.swift */,
+				F1000002000000000000000C /* SnippetStore.swift */,
 				C10000020000000000000009 /* SSHConnectionManager.swift */,
 				D10000020000000000000008 /* SSHKeyService.swift */,
 				C1000002000000000000000F /* SpeechRecognitionService.swift */,
+				F1000002000000000000000D /* TerminalBlockDetector.swift */,
+				F1000002000000000000000E /* TmuxSessionService.swift */,
 				D10000020000000000000009 /* TOFUHostKeyValidator.swift */,
+				F1000002000000000000000F /* WakeOnLANService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -198,7 +272,9 @@
 				D1000002000000000000000D /* ProfileEditorViewModel.swift */,
 				D1000002000000000000000C /* ProfileListViewModel.swift */,
 				D1000002000000000000000E /* RemoteFileBrowserViewModel.swift */,
+				F10000020000000000000010 /* RemoteFileEditorViewModel.swift */,
 				C1000002000000000000000B /* SessionViewModel.swift */,
+				F10000020000000000000011 /* SnippetDrawerViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -206,16 +282,35 @@
 		C10000030000000000000006 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				F10000020000000000000012 /* AgentVisualizerView.swift */,
+				F10000020000000000000013 /* ClaudeMDDashboardView.swift */,
+				F10000020000000000000014 /* ClaudeResourcesSidebarView.swift */,
+				F10000020000000000000015 /* ClaudetteTerminalView.swift */,
+				F10000020000000000000016 /* ConnectionStatusHUDView.swift */,
+				F10000020000000000000017 /* ExtendedKeyboardAccessoryView.swift */,
+				F10000020000000000000018 /* HookEditorFormView.swift */,
+				F10000020000000000000019 /* HooksAutomationView.swift */,
 				D10000020000000000000013 /* HostKeyAlertView.swift */,
 				D10000020000000000000010 /* ProfileEditorView.swift */,
 				D1000002000000000000000F /* ProfileListView.swift */,
 				D10000020000000000000012 /* RemoteFileBrowserView.swift */,
+				F1000002000000000000001A /* RemoteFileEditorView.swift */,
 				C1000002000000000000000E /* SessionView.swift */,
+				F1000002000000000000001B /* SnippetDrawerView.swift */,
+				F1000002000000000000001C /* SnippetEditorView.swift */,
 				D10000020000000000000011 /* SSHKeyManagementSection.swift */,
 				C1000002000000000000000D /* TerminalContainerView.swift */,
 				E10000020000000000000001 /* SplashView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		F10000030000000000000001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F1000002000000000000001D /* DefaultSnippets.json */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -287,6 +382,7 @@
 				A10000010000000000000004 /* Preview Assets.xcassets in Resources */,
 				A10000010000000000000003 /* Assets.xcassets in Resources */,
 				C10000010000000000000001 /* Configuration.plist in Resources */,
+				F1000001000000000000001D /* DefaultSnippets.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -331,6 +427,34 @@
 				D10000010000000000000012 /* RemoteFileBrowserView.swift in Sources */,
 				D10000010000000000000013 /* HostKeyAlertView.swift in Sources */,
 				E10000010000000000000001 /* SplashView.swift in Sources */,
+				F10000010000000000000001 /* AgentTreeNode.swift in Sources */,
+				F10000010000000000000002 /* ClaudeResource.swift in Sources */,
+				F10000010000000000000003 /* ClaudeSettings.swift in Sources */,
+				F10000010000000000000004 /* NetworkStatus.swift in Sources */,
+				F10000010000000000000005 /* PromptSnippet.swift in Sources */,
+				F10000010000000000000006 /* SnippetCategory.swift in Sources */,
+				F10000010000000000000007 /* AgentActivityParser.swift in Sources */,
+				F10000010000000000000008 /* ClaudeResourceDiscoveryService.swift in Sources */,
+				F10000010000000000000009 /* ClaudeSettingsService.swift in Sources */,
+				F1000001000000000000000A /* NetworkProbeService.swift in Sources */,
+				F1000001000000000000000B /* PermissionNotificationService.swift in Sources */,
+				F1000001000000000000000C /* SnippetStore.swift in Sources */,
+				F1000001000000000000000D /* TerminalBlockDetector.swift in Sources */,
+				F1000001000000000000000E /* TmuxSessionService.swift in Sources */,
+				F1000001000000000000000F /* WakeOnLANService.swift in Sources */,
+				F10000010000000000000010 /* RemoteFileEditorViewModel.swift in Sources */,
+				F10000010000000000000011 /* SnippetDrawerViewModel.swift in Sources */,
+				F10000010000000000000012 /* AgentVisualizerView.swift in Sources */,
+				F10000010000000000000013 /* ClaudeMDDashboardView.swift in Sources */,
+				F10000010000000000000014 /* ClaudeResourcesSidebarView.swift in Sources */,
+				F10000010000000000000015 /* ClaudetteTerminalView.swift in Sources */,
+				F10000010000000000000016 /* ConnectionStatusHUDView.swift in Sources */,
+				F10000010000000000000017 /* ExtendedKeyboardAccessoryView.swift in Sources */,
+				F10000010000000000000018 /* HookEditorFormView.swift in Sources */,
+				F10000010000000000000019 /* HooksAutomationView.swift in Sources */,
+				F1000001000000000000001A /* RemoteFileEditorView.swift in Sources */,
+				F1000001000000000000001B /* SnippetDrawerView.swift in Sources */,
+				F1000001000000000000001C /* SnippetEditorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -463,7 +587,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Claudette/Preview Content\"";
 				DEVELOPMENT_TEAM = 963B7732N5;
 				ENABLE_PREVIEWS = YES;
@@ -485,7 +609,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.olorin.claudette;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -501,7 +625,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Claudette/Preview Content\"";
 				DEVELOPMENT_TEAM = 963B7732N5;
 				ENABLE_PREVIEWS = YES;
@@ -523,7 +647,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.olorin.claudette;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

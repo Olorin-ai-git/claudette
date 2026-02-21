@@ -1,0 +1,2812 @@
+
+    ✻
+    |
+   ▟█▙     Claude Code v2.1.49
+ ▐▛███▜▌   Sonnet 4.6 · Claude Max
+▝▜█████▛▘  ~/Documents/Projects/claudette
+  ▘▘ ▝▝  
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Plan to implement                                                            │
+│                                                                              │
+│ Plan: Claudette Multi-User/Multi-Mac Universal App                           │
+│                                                                              │
+│ Context                                                                      │
+│                                                                              │
+│ Claudette is an iOS SSH terminal client for Claude Code. It currently works  │
+│ only for a single user on a single Mac — with hardcoded Tailscale IP         │
+│ (100.88.181.13), username (olorin), project path                             │
+│ (/Users/olorin/Documents/Projects), and a static list of 52 project folders. │
+│  This plan transforms it into a universal app that any user can connect to   │
+│ any Mac.                                                                     │
+│                                                                              │
+│ ---                                                                          │
+│ Summary of Changes                                                           │
+│                                                                              │
+│ Area: Server targeting                                                       │
+│ Current: Hardcoded Tailscale IP                                              │
+│ After: Multi-profile + Bonjour LAN discovery + manual entry                  │
+│ ────────────────────────────────────────                                     │
+│ Area: Auth                                                                   │
+│ Current: Password only in UI                                                 │
+│ After: Password + Ed25519 keygen + PEM import                                │
+│ ────────────────────────────────────────                                     │
+│ Area: Project selection                                                      │
+│ Current: Static plist list of 52 folders                                     │
+│ After: Remote SFTP file browser                                              │
+│ ────────────────────────────────────────                                     │
+│ Area: Host verification                                                      │
+│ Current: .acceptAnything() (MITM-vulnerable)                                 │
+│ After: TOFU with fingerprint verification UI                                 │
+│ ────────────────────────────────────────                                     │
+│ Area: Profiles                                                               │
+│ Current: Single connection saved                                             │
+│ After: Named profiles ("Work Mac", "Home Mac")                               │
+│ ────────────────────────────────────────                                     │
+│ Area: Config                                                                 │
+│ Current: User-specific values in plist                                       │
+│ After: Generic defaults only                                                 │
+│                                                                              │
+│ File count: 17 Swift files -> 26 Swift files (12 new, 9 modified, 3 deleted) │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 1: Foundation Models                                                   │
+│                                                                              │
+│ Create new models, modify existing ones. No dependencies.                    │
+│                                                                              │
+│ New Files                                                                    │
+│                                                                              │
+│ Models/ServerProfile.swift                                                   │
+│                                                                              │
+│ - struct ServerProfile: Codable, Sendable, Hashable, Identifiable            │
+│ - Fields: id: UUID, name: String, host: String, port: Int, username: String, │
+│  authMethod: AuthMethod, lastProjectPath: String?, createdAt: Date,          │
+│ lastConnectedAt: Date?                                                       │
+│                                                                              │
+│ Models/KnownHost.swift                                                       │
+│                                                                              │
+│ - struct KnownHost: Codable, Sendable, Hashable, Identifiable                │
+│ - Fields: hostIdentifier: String (host:port), publicKeyData: Data, keyType:  │
+│ String, firstSeenAt: Date, lastSeenAt: Date                                  │
+│ - Computed: fingerprintSHA256: String (CryptoKit SHA-256 of key data)        │
+│                                                                              │
+│ Models/HostKeyVerificationResult.swift                                       │
+│                                                                              │
+│ - enum HostKeyVerificationResult with cases: .trusted, .newHost,             │
+│ .keyChanged(previousFingerprint:, newFingerprint:)                           │
+│                                                                              │
+│ Models/RemoteFileEntry.swift                                                 │
+│                                                                              │
+│ - struct RemoteFileEntry: Identifiable, Hashable                             │
+│ - Fields: name: String, path: String, isDirectory: Bool, size: UInt64?,      │
+│ modifiedAt: Date?                                                            │
+│                                                                              │
+│ Models/BonjourHost.swift                                                     │
+│                                                                              │
+│ - struct BonjourHost: Identifiable, Hashable                                 │
+│ - Fields: serviceName: String, hostname: String, port: Int, txtRecord:       │
+│ [String: String]                                                             │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ Models/AuthMethod.swift — Add cases for key-based auth:                      │
+│                                                                              │
+│ enum AuthMethod: Codable, Sendable, Hashable {                               │
+│     case password                                                            │
+│     case generatedKey(keyTag: String)                                        │
+│     case importedKey(keyTag: String)                                         │
+│ }                                                                            │
+│                                                                              │
+│ Add computed properties: displayName, isKeyBased, keyTag: String?            │
+│                                                                              │
+│ Models/ConnectionSettings.swift — Change projectFolder to projectPath        │
+│ (absolute remote path):                                                      │
+│                                                                              │
+│ struct ConnectionSettings: Codable, Sendable, Hashable {                     │
+│     var host: String                                                         │
+│     var port: Int                                                            │
+│     var username: String                                                     │
+│     var authMethod: AuthMethod                                               │
+│     var projectPath: String  // absolute remote path                         │
+│ }                                                                            │
+│                                                                              │
+│ Deleted Files                                                                │
+│                                                                              │
+│ Models/ProjectEntry.swift — No longer needed; remote filesystem browsed      │
+│ directly.                                                                    │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 2: Configuration                                                       │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ Config/AppConfiguration.swift — Remove user-specific SSH fields, add         │
+│ Bonjour:                                                                     │
+│                                                                              │
+│ - REMOVE: sshDefaultHost, sshDefaultUsername, sshProjectsBasePath,           │
+│ sshProjectFolders                                                            │
+│ - ADD: bonjourServiceType: String ("_ssh._tcp."), bonjourDomain: String ("") │
+│                                                                              │
+│ Configuration.plist — Remove SSH.DefaultHost, SSH.DefaultUsername,           │
+│ SSH.ProjectsBasePath, SSH.ProjectFolders. Add Bonjour section with           │
+│ ServiceType and Domain.                                                      │
+│                                                                              │
+│ project.pbxproj — Add Info.plist keys:                                       │
+│                                                                              │
+│ - NSLocalNetworkUsageDescription = "Claudette discovers Macs on your local   │
+│ network running SSH."                                                        │
+│ - NSBonjourServices = ["_ssh._tcp."]                                         │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 3: Core Services                                                       │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ Services/KeychainService.swift — Refactor for multi-profile:                 │
+│                                                                              │
+│ - Protocol changes: password methods keyed by profileId: UUID instead of     │
+│ account: String                                                              │
+│ - Add storePrivateKeyData(_ data: Data, keyTag: String),                     │
+│ retrievePrivateKeyData(keyTag:), deletePrivateKeyData(keyTag:)               │
+│ - Remove legacy storeConnectionSettings / retrieveConnectionSettings /       │
+│ deleteConnectionSettings                                                     │
+│ - Keep backward compat method for migration:                                 │
+│ retrieveLegacyConnectionSettings() -> ConnectionSettings?                    │
+│                                                                              │
+│ New Files                                                                    │
+│                                                                              │
+│ Services/ProfileStore.swift                                                  │
+│                                                                              │
+│ - Protocol: ProfileStoreProtocol with loadProfiles(), saveProfile(_:),       │
+│ deleteProfile(_:), updateProfile(_:)                                         │
+│ - Implementation: JSON file at ~/Library/Application                         │
+│ Support/com.olorin.claudette/profiles.json                                   │
+│ - Thread-safe with DispatchQueue                                             │
+│                                                                              │
+│ Services/HostKeyStore.swift                                                  │
+│                                                                              │
+│ - Protocol: HostKeyStoreProtocol with knownHost(forIdentifier:),             │
+│ storeHost(_:), removeHost(forIdentifier:), allKnownHosts()                   │
+│ - Implementation: JSON file at ~/Library/Application                         │
+│ Support/com.olorin.claudette/known_hosts.json                                │
+│                                                                              │
+│ Services/SSHKeyService.swift                                                 │
+│                                                                              │
+│ - Protocol: SSHKeyServiceProtocol                                            │
+│ - generateEd25519KeyPair() -> (privateKeyTag: String, publicKeyString:       │
+│ String) — uses CryptoKit Curve25519.Signing.PrivateKey(), stores in          │
+│ Keychain, returns OpenSSH-format public key string                           │
+│ - importPrivateKey(pemString:) -> (privateKeyTag: String, publicKeyString:   │
+│ String) — parses PEM (Ed25519 or RSA), stores in Keychain                    │
+│ - publicKeyString(forKeyTag:) -> String? — retrieve and format public key    │
+│ - deleteKey(keyTag:) — remove from Keychain                                  │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 4: Network Services                                                    │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ Services/SSHConnectionManager.swift — Three changes:                         │
+│                                                                              │
+│ 1. Host key validation: New connect signature accepts hostKeyValidator:      │
+│ SSHHostKeyValidator parameter. Uses SSHHostKeyValidator.custom() with        │
+│ TOFUHostKeyValidator instead of .acceptAnything()                            │
+│ 2. Auth method: buildAuthMethod handles .generatedKey / .importedKey — loads │
+│  key data from Keychain, detects Ed25519 vs RSA, builds appropriate          │
+│ SSHAuthenticationMethod                                                      │
+│ 3. Project path: Uses settings.projectPath directly (absolute path), removes │
+│  config.sshProjectsBasePath + "/" + concatenation                            │
+│                                                                              │
+│ New Files                                                                    │
+│                                                                              │
+│ Services/TOFUHostKeyValidator.swift                                          │
+│                                                                              │
+│ - Protocol: HostKeyVerificationDelegate with                                 │
+│ verifyHostKey(result:fingerprint:hostIdentifier:) async -> Bool              │
+│ - Class: TOFUHostKeyValidator implementing Citadel/NIOSSH host key           │
+│ validation                                                                   │
+│ - Flow: lookup host in HostKeyStore -> if not found: ask delegate (newHost)  │
+│ -> if found + matches: trust -> if found + differs: ask delegate             │
+│ (keyChanged)                                                                 │
+│ - On trust: store/update key in HostKeyStore                                 │
+│                                                                              │
+│ Services/BonjourDiscoveryService.swift                                       │
+│                                                                              │
+│ - @MainActor ObservableObject wrapping NetServiceBrowser                     │
+│ - Published: discoveredHosts: [BonjourHost], isSearching: Bool               │
+│ - startDiscovery() / stopDiscovery() methods                                 │
+│ - Implements NetServiceBrowserDelegate + NetServiceDelegate for resolution   │
+│                                                                              │
+│ Services/RemoteFileBrowserService.swift                                      │
+│                                                                              │
+│ - @MainActor ObservableObject using Citadel's SFTP subsystem                 │
+│ - Opens a separate short-lived SSH connection for browsing                   │
+│ - connect(host:port:authMethod:hostKeyValidator:) -> opens SFTP              │
+│ - listDirectory(atPath:) -> [RemoteFileEntry] — sorts directories first,     │
+│ filters ./..                                                                 │
+│ - getHomeDirectory() -> String — resolves ~ via SFTP realpath                │
+│ - disconnect()                                                               │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 5: ViewModels                                                          │
+│                                                                              │
+│ Deleted Files                                                                │
+│                                                                              │
+│ ViewModels/ConnectionSettingsViewModel.swift — Replaced by                   │
+│ ProfileListViewModel + ProfileEditorViewModel.                               │
+│                                                                              │
+│ New Files                                                                    │
+│                                                                              │
+│ ViewModels/ProfileListViewModel.swift                                        │
+│                                                                              │
+│ - Published: profiles: [ServerProfile], errorMessage: String?                │
+│ - Methods: loadProfiles(), deleteProfile(_:), duplicateProfile(_:)           │
+│ - Uses: ProfileStoreProtocol                                                 │
+│                                                                              │
+│ ViewModels/ProfileEditorViewModel.swift                                      │
+│                                                                              │
+│ - Published form fields: profileName, host, port, username, password,        │
+│ authMethod, validationError                                                  │
+│ - Published SSH key state: publicKeyString: String?, showImportKeySheet:     │
+│ Bool                                                                         │
+│ - Published Bonjour: bonjourHosts: [BonjourHost]                             │
+│ - Methods: validate(), save() -> ServerProfile?, generateSSHKey(),           │
+│ importSSHKey(_:), selectBonjourHost(_:)                                      │
+│ - Uses: ProfileStore, KeychainService, SSHKeyService,                        │
+│ BonjourDiscoveryService                                                      │
+│                                                                              │
+│ ViewModels/RemoteFileBrowserViewModel.swift                                  │
+│                                                                              │
+│ - Published: currentPath, entries: [RemoteFileEntry], isLoading, error,      │
+│ pathComponents: [String]                                                     │
+│ - Methods: loadInitialDirectory(), navigateTo(_:), navigateUp(),             │
+│ selectDirectory(_:) -> String                                                │
+│ - Uses: RemoteFileBrowserService                                             │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ ViewModels/SessionViewModel.swift                                            │
+│                                                                              │
+│ - Add HostKeyVerificationDelegate conformance                                │
+│ - Add profile: ServerProfile parameter                                       │
+│ - Add @Published hostKeyAlert: HostKeyAlertState? for TOFU UI                │
+│ - HostKeyAlertState struct with result, fingerprint, hostIdentifier,         │
+│ continuation                                                                 │
+│ - verifyHostKey method: for .trusted return true; for .newHost/.keyChanged   │
+│ present alert via continuation                                               │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 6: Views                                                               │
+│                                                                              │
+│ Deleted Files                                                                │
+│                                                                              │
+│ Views/ConnectionSettingsView.swift — Replaced by ProfileListView +           │
+│ ProfileEditorView.                                                           │
+│                                                                              │
+│ New Files                                                                    │
+│                                                                              │
+│ Views/ProfileListView.swift (new root view)                                  │
+│                                                                              │
+│ - List of saved profiles with name, host, last-connected date                │
+│ - First-run: welcome state + "Add Your First Mac" button                     │
+│ - Swipe actions: edit, delete                                                │
+│ - Toolbar: "+" to add new profile                                            │
+│ - onSelectProfile callback -> triggers file browser                          │
+│ - onEditProfile callback -> opens editor sheet                               │
+│                                                                              │
+│ Views/ProfileEditorView.swift                                                │
+│                                                                              │
+│ - Form sections: Profile Name, Server (host/port/username + Bonjour          │
+│ discovery), Authentication (password or SSH key)                             │
+│ - Bonjour hosts shown in expandable disclosure group                         │
+│ - Save/Cancel buttons                                                        │
+│                                                                              │
+│ Views/SSHKeyManagementSection.swift                                          │
+│                                                                              │
+│ - Conditional on key-based auth                                              │
+│ - Shows public key (monospaced) with Copy to Clipboard button                │
+│ - "Add this to ~/.ssh/authorized_keys on the server" instruction text        │
+│ - Buttons: "Generate New Ed25519 Key", "Import Existing Key..."              │
+│                                                                              │
+│ Views/RemoteFileBrowserView.swift                                            │
+│                                                                              │
+│ - Full-screen cover presented after selecting a profile                      │
+│ - Breadcrumb path bar at top                                                 │
+│ - List of directories/files (directories first)                              │
+│ - Tap directory to navigate into it                                          │
+│ - "Select This Folder" toolbar button to confirm selection                   │
+│ - Starts at user's home directory                                            │
+│                                                                              │
+│ Views/HostKeyAlertView.swift                                                 │
+│                                                                              │
+│ - For .newHost: shield icon, fingerprint display, Trust/Reject buttons       │
+│ - For .keyChanged: warning triangle, red text, old vs new fingerprint        │
+│ comparison, "Trust Anyway"/Reject                                            │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ Views/SessionView.swift                                                      │
+│                                                                              │
+│ - Toolbar shows profile.name instead of settings.host (host shown as         │
+│ subtitle)                                                                    │
+│ - Present HostKeyAlertView as sheet when viewModel.hostKeyAlert is non-nil   │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 7: Integration                                                         │
+│                                                                              │
+│ Modified Files                                                               │
+│                                                                              │
+│ ContentView.swift — New navigation flow:                                     │
+│                                                                              │
+│ ProfileListView (root)                                                       │
+│   |-- sheet -> ProfileEditorView (create/edit)                               │
+│   |-- fullScreenCover -> RemoteFileBrowserView (browse remote FS)            │
+│   |-- navigationDestination -> SessionView (terminal)                        │
+│                                                                              │
+│ - Receives all services as injection parameters                              │
+│ - Creates ProfileListViewModel as @StateObject                               │
+│                                                                              │
+│ ClaudetteApp.swift — Composition root wires all new services:                │
+│                                                                              │
+│ - Creates: ProfileStore, HostKeyStore, SSHKeyService,                        │
+│ BonjourDiscoveryService                                                      │
+│ - Passes all to ContentView                                                  │
+│ - Migration logic: On init, checks for legacy connection_settings in         │
+│ Keychain. If found, migrates to a ServerProfile in ProfileStore, then        │
+│ deletes legacy entry.                                                        │
+│                                                                              │
+│ ---                                                                          │
+│ Phase 8: Cleanup                                                             │
+│                                                                              │
+│ - Delete ConnectionSettingsView.swift                                        │
+│ - Delete ConnectionSettingsViewModel.swift                                   │
+│ - Delete ProjectEntry.swift                                                  │
+│ - Remove any unused imports from modified files                              │
+│                                                                              │
+│ ---                                                                          │
+│ Implementation Order                                                         │
+│                                                                              │
+│ Phase 1 (Models)         -- no dependencies                                  │
+│ Phase 2 (Config)         -- depends on Phase 1                               │
+│ Phase 3 (Core Services)  -- depends on Phase 1, 2                            │
+│ Phase 4 (Network Svc)    -- depends on Phase 3                               │
+│ Phase 5 (ViewModels)     -- depends on Phase 3, 4                            │
+│ Phase 6 (Views)          -- depends on Phase 5                               │
+│ Phase 7 (Integration)    -- depends on Phase 6                               │
+│ Phase 8 (Cleanup)        -- depends on Phase 7                               │
+│                                                                              │
+│ ---                                                                          │
+│ Verification                                                                 │
+│                                                                              │
+│ 1. Build: Project compiles with zero warnings                                │
+│ 2. First-run: Launch app -> see empty ProfileListView with welcome state ->  │
+│ tap "Add" -> fill in server details -> save profile                          │
+│ 3. Bonjour: On same LAN as a Mac with SSH enabled -> discovered hosts appear │
+│  in ProfileEditorView                                                        │
+│ 4. SSH key gen: In profile editor, select SSH Key auth -> tap Generate ->    │
+│ see public key -> copy to clipboard -> verify it's valid OpenSSH format      │
+│ 5. Connect + TOFU: Tap saved profile -> HostKeyAlertView appears showing     │
+│ fingerprint -> tap Trust -> key stored -> second connection should           │
+│ auto-trust                                                                   │
+│ 6. File browser: After auth, RemoteFileBrowserView opens at home dir ->      │
+│ navigate to a project folder -> tap "Select This Folder"                     │
+│ 7. Terminal: After folder selection, SessionView opens with PTY -> Claude    │
+│ Code starts in the selected directory                                        │
+│ 8. Multi-profile: Create a second profile with different server -> both      │
+│ appear in list -> each connects independently                                │
+│ 9. Key change warning: Manually edit known_hosts.json to corrupt a           │
+│ fingerprint -> connect -> see red warning alert                              │
+│ 10. Migration: Install current version, connect once, then install new       │
+│ version -> saved connection migrated to a named profile                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+⏺ I'll start by exploring the existing codebase to understand the current
+  structure before implementing the plan.
+
+⏺ Explore(Explore Claudette codebase structure) Haiku 4.5
+  ⎿  Done (25 tool uses · 58.2k tokens · 1m 2s)
+  (ctrl+o to expand)
+
+⏺ Good, I have a comprehensive understanding of the codebase. Let me read the
+  key files I'll be modifying to have exact content for edits.
+
+⏺ Read 16 files (ctrl+o to expand)
+
+⏺ Now let me read the pbxproj file to understand the build system structure for
+  adding new files.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ I have a complete understanding of the codebase. This is a large 8-phase
+  refactor. Let me create task tracking and start implementing.
+
+⏺ Starting Phase 1: Foundation Models. I'll modify existing models and create
+  new ones in parallel.
+
+⏺ Write(Claudette/Models/AuthMethod.swift)
+  ⎿  Added 31 lines, removed 1 line
+       2  
+       3  enum AuthMethod: Codable, Sendable, Hashable {
+       4      case password
+       5 -    case privateKey(keyTag: String)                            
+       5 +    case generatedKey(keyTag: String)                          
+       6 +    case importedKey(keyTag: String)                           
+       7 +                                                               
+       8 +    var displayName: String {                                  
+       9 +        switch self {                                          
+      10 +        case .password:                                        
+      11 +            return "Password"                                  
+      12 +        case .generatedKey:                                    
+      13 +            return "Generated SSH Key"                         
+      14 +        case .importedKey:                                     
+      15 +            return "Imported SSH Key"                          
+      16 +        }                                                      
+      17 +    }                                                          
+      18 +                                                               
+      19 +    var isKeyBased: Bool {                                     
+      20 +        switch self {                                          
+      21 +        case .password:                                        
+      22 +            return false                                       
+      23 +        case .generatedKey, .importedKey:                      
+      24 +            return true                                        
+      25 +        }                                                      
+      26 +    }                                                          
+      27 +                                                               
+      28 +    var keyTag: String? {                                      
+      29 +        switch self {                                          
+      30 +        case .password:                                        
+      31 +            return nil                                         
+      32 +        case .generatedKey(let tag), .importedKey(let tag):    
+      33 +            return tag                                         
+      34 +        }                                                      
+      35 +    }                                                          
+      36  }
+
+⏺ Write(Claudette/Models/ConnectionSettings.swift)
+  ⎿  Added 1 line, removed 1 line
+      5      var port: Int
+      6      var username: String
+      7      var authMethod: AuthMethod
+      8 -    var projectFolder: String                                   
+      8 +    var projectPath: String                                     
+      9  }
+
+⏺ Write(Claudette/Models/ServerProfile.swift)
+  ⎿  Wrote 45 lines to Claudette/Models/ServerProfile.swift
+       1 import Foundation
+       2 
+       3 struct ServerProfile: Codable, Sendable, Hashable, Identifiable 
+         {
+       4     let id: UUID
+       5     var name: String
+       6     var host: String
+       7     var port: Int
+       8     var username: String
+       9     var authMethod: AuthMethod
+      10     var lastProjectPath: String?
+     … +35 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Models/KnownHost.swift)
+  ⎿  Wrote 36 lines to Claudette/Models/KnownHost.swift
+      1 import CryptoKit
+      2 import Foundation
+      3 
+      4 struct KnownHost: Codable, Sendable, Hashable, Identifiable {
+      5     let hostIdentifier: String
+      6     let publicKeyData: Data
+      7     let keyType: String
+      8     let firstSeenAt: Date
+      9     var lastSeenAt: Date
+     … +26 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Models/HostKeyVerificationResult.swift)
+  ⎿  Wrote 7 lines to Claudette/Models/HostKeyVerificationResult.swift
+      1 import Foundation
+      2 
+      3 enum HostKeyVerificationResult: Sendable {
+      4     case trusted
+      5     case newHost
+      6     case keyChanged(previousFingerprint: String, newFingerprint: 
+        String)
+      7 }
+
+⏺ Write(Claudette/Models/RemoteFileEntry.swift)
+  ⎿  Wrote 11 lines to Claudette/Models/RemoteFileEntry.swift
+       1 import Foundation
+       2 
+       3 struct RemoteFileEntry: Identifiable, Hashable, Sendable {
+       4     let name: String
+       5     let path: String
+       6     let isDirectory: Bool
+       7     let size: UInt64?
+       8     let modifiedAt: Date?
+       9 
+      10     var id: String { path }
+     … +1 line (ctrl+o to expand)
+
+⏺ Write(Claudette/Models/BonjourHost.swift)
+  ⎿  Wrote 17 lines to Claudette/Models/BonjourHost.swift
+      1 import Foundation
+      2 
+      3 struct BonjourHost: Identifiable, Hashable, Sendable {
+      4     let serviceName: String
+      5     let hostname: String
+      6     let port: Int
+      7     let txtRecord: [String: String]
+      8 
+      9     var id: String { serviceName + hostname + String(port) }
+     … +7 lines (ctrl+o to expand)
+  ⎿  Found 12 new diagnostic issues in 2 files (ctrl+o to expand)
+
+⏺ Phase 1 complete. The SourceKit diagnostics are just indexing lag — they'll
+  resolve once files are in the build. Moving to Phase 2.
+
+⏺ Phase 2: Configuration. Updating AppConfiguration and Configuration.plist.
+
+⏺ Write(Claudette/Config/AppConfiguration.swift)
+  ⎿  Added 7 lines, removed 8 lines
+       3  struct AppConfiguration: Sendable {
+       4      let sshDefaultPort: Int
+       5      let sshConnectTimeout: Int
+       6 -    let sshDefaultHost: String                                 
+       7 -    let sshDefaultUsername: String                             
+       6      let sshCommand: String
+       9 -    let sshProjectsBasePath: String                            
+      10 -    let sshProjectFolders: [String]                            
+       7  
+       8 +    let bonjourServiceType: String                             
+       9 +    let bonjourDomain: String                                  
+      10 +                                                               
+      11      let terminalFontName: String
+      12      let terminalFontSize: CGFloat
+      13      let terminalForegroundColor: String
+     ...
+      29          }
+      30  
+      31          let ssh = Self.requiredDict(root, key: "SSH")
+      32 +        let bonjour = Self.requiredDict(root, key: "Bonjour")  
+      33          let terminal = Self.requiredDict(root, key: "Terminal")
+      34          let keychain = Self.requiredDict(root, key: "Keychain")
+      35          let loggerConfig = Self.requiredDict(root, key: "Logger
+          ")
+      36  
+      37          sshDefaultPort = Self.required(ssh, key: "DefaultPort")
+      38          sshConnectTimeout = Self.required(ssh, key: "ConnectTim
+          eoutSeconds")
+      39 -        sshDefaultHost = Self.required(ssh, key: "DefaultHost")
+      40 -        sshDefaultUsername = Self.required(ssh, key: "DefaultUs
+         -ername")                                                       
+      39          sshCommand = Self.required(ssh, key: "Command")
+      42 -        sshProjectsBasePath = Self.required(ssh, key: "Projects
+         -BasePath")                                                     
+      43 -        sshProjectFolders = Self.required(ssh, key: "ProjectFol
+         -ders")                                                         
+      40  
+      41 +        bonjourServiceType = Self.required(bonjour, key: "Servi
+         +ceType")                                                       
+      42 +        bonjourDomain = Self.required(bonjour, key: "Domain")  
+      43 +                                                               
+      44          terminalFontName = Self.required(terminal, key: "FontNa
+          me")
+      45          terminalFontSize = CGFloat(Self.required(terminal, key:
+           "FontSize") as Double)
+      46          terminalForegroundColor = Self.required(terminal, key: 
+          "ForegroundColor")
+
+⏺ Write(Claudette/Configuration.plist)
+  ⎿  Added 7 lines, removed 40 lines
+       8      <integer>22</integer>
+       9      <key>ConnectTimeoutSeconds</key>
+      10      <integer>30</integer>
+      11 -    <key>DefaultHost</key>                                     
+      12 -    <string>100.88.181.13</string>                             
+      13 -    <key>DefaultUsername</key>                                 
+      14 -    <string>olorin</string>                                    
+      11      <key>Command</key>
+      12      <string>claude</string>
+      17 -    <key>ProjectsBasePath</key>                                
+      18 -    <string>/Users/olorin/Documents/Projects</string>          
+      19 -    <key>ProjectFolders</key>                                  
+      20 -    <array>                                                    
+      21 -      <string>awesome-claude-skills</string>                   
+      22 -      <string>busteni</string>                                 
+      23 -      <string>claudette</string>                               
+      24 -      <string>llm-council</string>                             
+      25 -      <string>MathFriends</string>                             
+      26 -      <string>olorin</string>                                  
+      27 -      <string>olorin/olorin-auth</string>                      
+      28 -      <string>olorin/olorin-core</string>                      
+      29 -      <string>olorin/olorin-cv</string>                        
+      30 -      <string>olorin/olorin-fraud</string>                     
+      31 -      <string>olorin/olorin-infra</string>                     
+      32 -      <string>olorin/olorin-media</string>                     
+      33 -      <string>olorin/olorin-media/bayit-plus</string>          
+      34 -      <string>olorin/olorin-media/bayit-plus/android-app</strin
+         -g>                                                             
+      35 -      <string>olorin/olorin-media/bayit-plus/backend</string>  
+      36 -      <string>olorin/olorin-media/bayit-plus/chrome-extension</
+         -string>                                                        
+      37 -      <string>olorin/olorin-media/bayit-plus/cli</string>      
+      38 -      <string>olorin/olorin-media/bayit-plus/docs-portal</strin
+         -g>                                                             
+      39 -      <string>olorin/olorin-media/bayit-plus/infrastructure</st
+         -ring>                                                          
+      40 -      <string>olorin/olorin-media/bayit-plus/ios-app</string>  
+      41 -      <string>olorin/olorin-media/bayit-plus/packages</string> 
+      42 -      <string>olorin/olorin-media/bayit-plus/partner-portal</st
+         -ring>                                                          
+      43 -      <string>olorin/olorin-media/bayit-plus/shared</string>   
+      44 -      <string>olorin/olorin-media/bayit-plus/tizen</string>    
+      45 -      <string>olorin/olorin-media/bayit-plus/web</string>      
+      46 -      <string>olorin/olorin-media/bayit-plus/webos</string>    
+      47 -      <string>olorin/olorin-media/israeli-radio-manager</string
+         ->                                                              
+      48 -      <string>olorin/olorin-media/station-ai</string>          
+      49 -      <string>olorin/olorin-omen</string>                      
+      50 -      <string>olorin/olorin-portals</string>                   
+      51 -      <string>olorin/fraud</string>                            
+      52 -    </array>                                                   
+      13    </dict>
+      14 +  <key>Bonjour</key>                                           
+      15 +  <dict>                                                       
+      16 +    <key>ServiceType</key>                                     
+      17 +    <string>_ssh._tcp.</string>                                
+      18 +    <key>Domain</key>                                          
+      19 +    <string></string>                                          
+      20 +  </dict>                                                      
+      21    <key>Terminal</key>
+      22    <dict>
+      23      <key>FontName</key>
+
+⏺ Now add the Bonjour and local network permission keys to the pbxproj build
+  settings.
+
+⏺ Update(Claudette.xcodeproj/project.pbxproj)
+  ⎿  Added 2 lines
+      404          INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = 
+           "UIInterfaceOrientationPortrait UIInterfaceOrientationPortrait
+           UpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrie
+           ntationLandscapeRight";
+      405          INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone 
+           = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandsc
+           apeLeft UIInterfaceOrientationLandscapeRight";
+      406          INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+      407 +        INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Claude
+          +tte discovers Macs on your local network running SSH.";       
+      408          INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudett
+           e uses the microphone for voice dictation to send commands to 
+           the terminal.";
+      409          INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "C
+           laudette uses speech recognition to convert your voice into te
+           rminal commands.";
+      410 +        INFOPLIST_KEY_NSBonjourServices = "_ssh._tcp.";       
+      411          LD_RUNPATH_SEARCH_PATHS = (
+      412            "$(inherited)",
+      413            "@executable_path/Frameworks",
+
+⏺ Update(Claudette.xcodeproj/project.pbxproj)
+  ⎿  Added 2 lines
+      437          INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = 
+           "UIInterfaceOrientationPortrait UIInterfaceOrientationPortrait
+           UpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrie
+           ntationLandscapeRight";
+      438          INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone 
+           = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandsc
+           apeLeft UIInterfaceOrientationLandscapeRight";
+      439          INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+      440 +        INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Claude
+          +tte discovers Macs on your local network running SSH.";       
+      441          INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudett
+           e uses the microphone for voice dictation to send commands to 
+           the terminal.";
+      442          INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "C
+           laudette uses speech recognition to convert your voice into te
+           rminal commands.";
+      443 +        INFOPLIST_KEY_NSBonjourServices = "_ssh._tcp.";       
+      444          LD_RUNPATH_SEARCH_PATHS = (
+      445            "$(inherited)",
+      446            "@executable_path/Frameworks",
+
+⏺ Phase 3: Core Services. Refactoring KeychainService and creating ProfileStore,
+   HostKeyStore, SSHKeyService.
+
+⏺ Write(Claudette/Services/KeychainService.swift)
+  ⎿  Added 96 lines, removed 38 lines
+      20  }
+      21  
+      22  protocol KeychainServiceProtocol: Sendable {
+      23 -    func storePassword(_ password: String, account: String) thr
+         -ows                                                            
+      24 -    func retrievePassword(account: String) -> String?          
+      25 -    func deletePassword(account: String) throws                
+      26 -    func storeConnectionSettings(_ settings: ConnectionSettings
+         -) throws                                                       
+      27 -    func retrieveConnectionSettings() -> ConnectionSettings?   
+      28 -    func deleteConnectionSettings() throws                     
+      23 +    func storePassword(_ password: String, profileId: UUID) thr
+         +ows                                                            
+      24 +    func retrievePassword(profileId: UUID) -> String?          
+      25 +    func deletePassword(profileId: UUID) throws                
+      26 +    func storePrivateKeyData(_ data: Data, keyTag: String) thro
+         +ws                                                             
+      27 +    func retrievePrivateKeyData(keyTag: String) -> Data?       
+      28 +    func deletePrivateKeyData(keyTag: String) throws           
+      29 +    func retrieveLegacyConnectionSettings() -> LegacyConnection
+         +Settings?                                                      
+      30 +    func deleteLegacyConnectionSettings() throws               
+      31 +    func retrieveLegacyPassword(account: String) -> String?    
+      32 +    func deleteLegacyPassword(account: String) throws          
+      33  }
+      34  
+      35 +struct LegacyConnectionSettings: Codable {                     
+      36 +    var host: String                                           
+      37 +    var port: Int                                              
+      38 +    var username: String                                       
+      39 +    var projectFolder: String                                  
+      40 +}                                                              
+      41 +                                                               
+      42  final class KeychainService: KeychainServiceProtocol, @unchecke
+          d Sendable {
+      43      private let serviceName: String
+      44      private let logger: Logger
+      34 -    private static let settingsAccount = "connection_settings" 
+      45 +    private static let legacySettingsAccount = "connection_sett
+         +ings"                                                          
+      46  
+      47      init(serviceName: String, logger: Logger) {
+      48          self.serviceName = serviceName
+      49          self.logger = logger
+      50      }
+      51  
+      41 -    func storePassword(_ password: String, account: String) thr
+         -ows {                                                          
+      42 -        try? deletePassword(account: account)                  
+      52 +    // MARK: - Profile Passwords                               
+      53  
+      44 -        guard let data = password.data(using: .utf8) else {    
+      45 -            throw KeychainError.encodingFailed                 
+      46 -        }                                                      
+      54 +    func storePassword(_ password: String, profileId: UUID) thr
+         +ows {                                                          
+      55 +        let account = "profile_" + profileId.uuidString        
+      56 +        try storeGenericPassword(password, account: account)   
+      57 +    }                                                          
+      58  
+      59 +    func retrievePassword(profileId: UUID) -> String? {        
+      60 +        let account = "profile_" + profileId.uuidString        
+      61 +        return retrieveGenericPassword(account: account)       
+      62 +    }                                                          
+      63 +                                                               
+      64 +    func deletePassword(profileId: UUID) throws {              
+      65 +        let account = "profile_" + profileId.uuidString        
+      66 +        try deleteGenericItem(account: account)                
+      67 +    }                                                          
+      68 +                                                               
+      69 +    // MARK: - Private Key Storage                             
+      70 +                                                               
+      71 +    func storePrivateKeyData(_ data: Data, keyTag: String) thro
+         +ws {                                                           
+      72 +        try? deletePrivateKeyData(keyTag: keyTag)              
+      73 +                                                               
+      74          let query: [String: Any] = [
+      75              kSecClass as String: kSecClassGenericPassword,
+      76              kSecAttrService as String: serviceName,
+      51 -            kSecAttrAccount as String: account,                
+      77 +            kSecAttrAccount as String: "key_" + keyTag,        
+      78              kSecValueData as String: data,
+      79              kSecAttrAccessible as String: kSecAttrAccessibleWhe
+          nUnlockedThisDeviceOnly
+      80          ]
+      81  
+      82          let status = SecItemAdd(query as CFDictionary, nil)
+      83          guard status == errSecSuccess else {
+      58 -            logger.error("Keychain store failed for account \(a
+         -ccount, privacy: .public): status \(status)")                  
+      84 +            logger.error("Failed to store private key data: sta
+         +tus \(status)")                                                
+      85              throw KeychainError.storeFailed(status: status)
+      86          }
+      87  
+      62 -        logger.info("Stored credential for account: \(account, 
+         -privacy: .public)")                                            
+      88 +        logger.info("Stored private key with tag: \(keyTag, pri
+         +vacy: .public)")                                               
+      89      }
+      90  
+      65 -    func retrievePassword(account: String) -> String? {        
+      91 +    func retrievePrivateKeyData(keyTag: String) -> Data? {     
+      92          let query: [String: Any] = [
+      93              kSecClass as String: kSecClassGenericPassword,
+      94              kSecAttrService as String: serviceName,
+      69 -            kSecAttrAccount as String: account,                
+      95 +            kSecAttrAccount as String: "key_" + keyTag,        
+      96              kSecReturnData as String: true,
+      97              kSecMatchLimit as String: kSecMatchLimitOne
+      98          ]
+     ...
+      100          var result: AnyObject?
+      101          let status = SecItemCopyMatching(query as CFDictionary
+           , &result)
+      102  
+       77 -        guard status == errSecSuccess,                        
+       78 -              let data = result as? Data,                     
+       79 -              let password = String(data: data, encoding: .utf
+          -8) else {                                                     
+      103 +        guard status == errSecSuccess, let data = result as? D
+          +ata else {                                                    
+      104              return nil
+      105          }
+      106  
+       83 -        return password                                       
+      107 +        return data                                           
+      108      }
+      109  
+       86 -    func deletePassword(account: String) throws {             
+      110 +    func deletePrivateKeyData(keyTag: String) throws {        
+      111          let query: [String: Any] = [
+      112              kSecClass as String: kSecClassGenericPassword,
+      113              kSecAttrService as String: serviceName,
+       90 -            kSecAttrAccount as String: account                
+      114 +            kSecAttrAccount as String: "key_" + keyTag        
+      115          ]
+      116  
+      117          let status = SecItemDelete(query as CFDictionary)
+     ...
+      120          }
+      121      }
+      122  
+       99 -    func storeConnectionSettings(_ settings: ConnectionSetting
+          -s) throws {                                                   
+      100 -        try? deleteConnectionSettings()                       
+      123 +    // MARK: - Legacy Migration                               
+      124  
+      102 -        let data: Data                                        
+      103 -        do {                                                  
+      104 -            data = try JSONEncoder().encode(settings)         
+      105 -        } catch {                                             
+      125 +    func retrieveLegacyConnectionSettings() -> LegacyConnectio
+          +nSettings? {                                                  
+      126 +        let query: [String: Any] = [                          
+      127 +            kSecClass as String: kSecClassGenericPassword,    
+      128 +            kSecAttrService as String: serviceName,           
+      129 +            kSecAttrAccount as String: Self.legacySettingsAcco
+          +unt,                                                          
+      130 +            kSecReturnData as String: true,                   
+      131 +            kSecMatchLimit as String: kSecMatchLimitOne       
+      132 +        ]                                                     
+      133 +                                                              
+      134 +        var result: AnyObject?                                
+      135 +        let status = SecItemCopyMatching(query as CFDictionary
+          +, &result)                                                    
+      136 +                                                              
+      137 +        guard status == errSecSuccess,                        
+      138 +              let data = result as? Data,                     
+      139 +              let settings = try? JSONDecoder().decode(LegacyC
+          +onnectionSettings.self, from: data) else {                    
+      140 +            return nil                                        
+      141 +        }                                                     
+      142 +                                                              
+      143 +        return settings                                       
+      144 +    }                                                         
+      145 +                                                              
+      146 +    func deleteLegacyConnectionSettings() throws {            
+      147 +        try deleteGenericItem(account: Self.legacySettingsAcco
+          +unt)                                                          
+      148 +    }                                                         
+      149 +                                                              
+      150 +    func retrieveLegacyPassword(account: String) -> String? { 
+      151 +        return retrieveGenericPassword(account: account)      
+      152 +    }                                                         
+      153 +                                                              
+      154 +    func deleteLegacyPassword(account: String) throws {       
+      155 +        try deleteGenericItem(account: account)               
+      156 +    }                                                         
+      157 +                                                              
+      158 +    // MARK: - Generic Helpers                                
+      159 +                                                              
+      160 +    private func storeGenericPassword(_ password: String, acco
+          +unt: String) throws {                                         
+      161 +        try? deleteGenericItem(account: account)              
+      162 +                                                              
+      163 +        guard let data = password.data(using: .utf8) else {   
+      164              throw KeychainError.encodingFailed
+      165          }
+      166  
+      167          let query: [String: Any] = [
+      168              kSecClass as String: kSecClassGenericPassword,
+      169              kSecAttrService as String: serviceName,
+      112 -            kSecAttrAccount as String: Self.settingsAccount,  
+      170 +            kSecAttrAccount as String: account,               
+      171              kSecValueData as String: data,
+      172              kSecAttrAccessible as String: kSecAttrAccessibleWh
+           enUnlockedThisDeviceOnly
+      173          ]
+      174  
+      175          let status = SecItemAdd(query as CFDictionary, nil)
+      176          guard status == errSecSuccess else {
+      119 -            logger.error("Failed to store connection settings:
+          - status \(status)")                                           
+      177 +            logger.error("Keychain store failed for account \(
+          +account, privacy: .public): status \(status)")                
+      178              throw KeychainError.storeFailed(status: status)
+      179          }
+      180  
+      123 -        logger.info("Stored connection settings for \(settings
+          -.host, privacy: .public)")                                    
+      181 +        logger.info("Stored credential for account: \(account,
+          + privacy: .public)")                                          
+      182      }
+      183  
+      126 -    func retrieveConnectionSettings() -> ConnectionSettings? {
+      184 +    private func retrieveGenericPassword(account: String) -> S
+          +tring? {                                                      
+      185          let query: [String: Any] = [
+      186              kSecClass as String: kSecClassGenericPassword,
+      187              kSecAttrService as String: serviceName,
+      130 -            kSecAttrAccount as String: Self.settingsAccount,  
+      188 +            kSecAttrAccount as String: account,               
+      189              kSecReturnData as String: true,
+      190              kSecMatchLimit as String: kSecMatchLimitOne
+      191          ]
+     ...
+      195  
+      196          guard status == errSecSuccess,
+      197                let data = result as? Data,
+      140 -              let settings = try? JSONDecoder().decode(Connect
+          -ionSettings.self, from: data) else {                          
+      198 +              let password = String(data: data, encoding: .utf
+          +8) else {                                                     
+      199              return nil
+      200          }
+      201  
+      144 -        return settings                                       
+      202 +        return password                                       
+      203      }
+      204  
+      147 -    func deleteConnectionSettings() throws {                  
+      205 +    private func deleteGenericItem(account: String) throws {  
+      206          let query: [String: Any] = [
+      207              kSecClass as String: kSecClassGenericPassword,
+      208              kSecAttrService as String: serviceName,
+      151 -            kSecAttrAccount as String: Self.settingsAccount   
+      209 +            kSecAttrAccount as String: account                
+      210          ]
+      211  
+      212          let status = SecItemDelete(query as CFDictionary)
+
+⏺ Write(Claudette/Services/ProfileStore.swift)
+  ⎿  Wrote 89 lines to Claudette/Services/ProfileStore.swift
+      1 import Foundation
+      2 import os
+      3 
+      4 protocol ProfileStoreProtocol: Sendable {
+      5     func loadProfiles() throws -> [ServerProfile]
+      6     func saveProfile(_ profile: ServerProfile) throws
+      7     func deleteProfile(_ profileId: UUID) throws
+      8     func updateProfile(_ profile: ServerProfile) throws
+      9 }
+     … +79 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Services/HostKeyStore.swift)
+  ⎿  Wrote 81 lines to Claudette/Services/HostKeyStore.swift
+      1 import Foundation
+      2 import os
+      3 
+      4 protocol HostKeyStoreProtocol: Sendable {
+      5     func knownHost(forIdentifier identifier: String) -> KnownHost
+        ?
+      6     func storeHost(_ host: KnownHost) throws
+      7     func removeHost(forIdentifier identifier: String) throws
+      8     func allKnownHosts() -> [KnownHost]
+      9 }
+     … +71 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Services/SSHKeyService.swift)
+  ⎿  Wrote 184 lines to Claudette/Services/SSHKeyService.swift
+       1 import CryptoKit
+       2 import Foundation
+       3 import os
+       4 
+       5 protocol SSHKeyServiceProtocol: Sendable {
+       6     func generateEd25519KeyPair() throws -> (privateKeyTag: Stri
+         ng, publicKeyString: String)
+       7     func importPrivateKey(pemString: String) throws -> (privateK
+         eyTag: String, publicKeyString: String)
+       8     func publicKeyString(forKeyTag keyTag: String) -> String?
+       9     func deleteKey(keyTag: String) throws
+      10 }
+     … +174 lines (ctrl+o to expand)
+  ⎿  Found 19 new diagnostic issues in 2 files (ctrl+o to expand)
+  ⎿  Found 2 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Phase 4: Network Services. Modifying SSHConnectionManager and creating TOFU
+  validator, Bonjour discovery, and remote file browser.
+
+⏺ Write(Claudette/Services/TOFUHostKeyValidator.swift)
+  ⎿  Wrote 133 lines to Claudette/Services/TOFUHostKeyValidator.swift
+       1 import Citadel
+       2 import CryptoKit
+       3 import Foundation
+       4 import NIOSSH
+       5 import os
+       6 
+       7 protocol HostKeyVerificationDelegate: AnyObject, Sendable {
+       8     func verifyHostKey(
+       9         result: HostKeyVerificationResult,
+      10         fingerprint: String,
+     … +123 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Services/BonjourDiscoveryService.swift)
+  ⎿  Wrote 116 lines to Claudette/Services/BonjourDiscoveryService.swift
+       1 import Foundation
+       2 import os
+       3 
+       4 @MainActor
+       5 final class BonjourDiscoveryService: NSObject, ObservableObject 
+         {
+       6     @Published private(set) var discoveredHosts: [BonjourHost] =
+          []
+       7     @Published private(set) var isSearching: Bool = false
+       8 
+       9     private let serviceType: String
+      10     private let domain: String
+     … +106 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Services/RemoteFileBrowserService.swift)
+  ⎿  Wrote 142 lines to Claudette/Services/RemoteFileBrowserService.swift
+       1 import Citadel
+       2 import Foundation
+       3 import NIOSSH
+       4 import os
+       5 
+       6 @MainActor
+       7 final class RemoteFileBrowserService: ObservableObject {
+       8     @Published private(set) var isConnected: Bool = false
+       9 
+      10     private let logger: Logger
+     … +132 lines (ctrl+o to expand)
+  ⎿  Found 3 new diagnostic issues in 2 files (ctrl+o to expand)
+
+⏺ Now update SSHConnectionManager for TOFU host key validation, key-based auth,
+  and absolute project paths.
+
+⏺ Write(Claudette/Services/SSHConnectionManager.swift)
+  ⎿  Added 43 lines, removed 11 lines
+      1  import Citadel
+      2  import Crypto
+      3 +import CryptoKit                                                
+      4  import Foundation
+      5  import NIOCore
+      6  import NIOSSH
+     ...
+      11      @Published private(set) var connectionState: ConnectionStat
+          e = .disconnected
+      12  
+      13      private let config: AppConfiguration
+      14 +    private let keychainService: KeychainServiceProtocol       
+      15      private let logger: Logger
+      16      private var stdinWriter: TTYStdinWriter?
+      17      private var connectionTask: Task<Void, Never>?
+      18      private weak var terminalView: TerminalView?
+      19  
+      18 -    init(config: AppConfiguration, logger: Logger) {           
+      20 +    init(config: AppConfiguration, keychainService: KeychainSer
+         +viceProtocol, logger: Logger) {                                
+      21          self.config = config
+      22 +        self.keychainService = keychainService                 
+      23          self.logger = logger
+      24      }
+      25  
+     ...
+      27          terminalView = view
+      28      }
+      29  
+      27 -    func connect(settings: ConnectionSettings, credential: Stri
+         -ng) {                                                          
+      30 +    func connect(                                              
+      31 +        settings: ConnectionSettings,                          
+      32 +        credential: String,                                    
+      33 +        hostKeyValidator: SSHHostKeyValidator                  
+      34 +    ) {                                                        
+      35          switch connectionState {
+      36          case .connecting, .connected:
+      37              return
+     ...
+      39              break
+      40          }
+      41  
+      35 -        guard !credential.isEmpty else {                       
+      42 +        guard !credential.isEmpty || settings.authMethod.isKeyB
+         +ased else {                                                    
+      43              connectionState = .failed(errorDescription: "Missin
+          g credential")
+      44              return
+      45          }
+     ...
+      49  
+      50          let config = self.config
+      51          let logger = self.logger
+      52 +        let keychainService = self.keychainService             
+      53  
+      54          connectionTask = Task { [weak self] in
+      55              do {
+      56                  let sshAuth = try Self.buildAuthMethod(
+      57                      settings: settings,
+      50 -                    credential: credential                     
+      58 +                    credential: credential,                    
+      59 +                    keychainService: keychainService           
+      60                  )
+      61  
+      62                  let client = try await SSHClient.connect(
+      63                      host: settings.host,
+      64                      port: settings.port,
+      65                      authenticationMethod: sshAuth,
+      57 -                    hostKeyValidator: .acceptAnything(),       
+      66 +                    hostKeyValidator: hostKeyValidator,        
+      67                      reconnect: .never,
+      68                      connectTimeout: .seconds(Int64(config.sshCo
+          nnectTimeout))
+      69                  )
+     ...
+       97                          self?.stdinWriter = outbound
+       98                      }
+       99  
+       91 -                    let projectPath = config.sshProjectsBasePa
+          -th + "/" + settings.projectFolder                             
+       92 -                    let command = "cd " + projectPath + " && "
+          - + config.sshCommand + "\n"                                   
+      100 +                    let command = "cd " + settings.projectPath
+          + + " && " + config.sshCommand + "\n"                          
+      101                      var cmdBuffer = ByteBufferAllocator().buff
+           er(capacity: command.utf8.count)
+      102                      cmdBuffer.writeString(command)
+      103                      try await outbound.write(cmdBuffer)
+     ...
+      206  
+      207      private static func buildAuthMethod(
+      208          settings: ConnectionSettings,
+      201 -        credential: String                                    
+      209 +        credential: String,                                   
+      210 +        keychainService: KeychainServiceProtocol              
+      211      ) throws -> SSHAuthenticationMethod {
+      212          switch settings.authMethod {
+      213          case .password:
+      214              return .passwordBased(username: settings.username,
+            password: credential)
+      206 -        case .privateKey:                                     
+      207 -            let privateKey = try Insecure.RSA.PrivateKey(sshRs
+          -a: credential)                                                
+      208 -            return .rsa(username: settings.username, privateKe
+          -y: privateKey)                                                
+      215 +                                                              
+      216 +        case .generatedKey(let keyTag), .importedKey(let keyTa
+          +g):                                                           
+      217 +            guard let keyData = keychainService.retrievePrivat
+          +eKeyData(keyTag: keyTag) else {                               
+      218 +                throw SSHKeyAuthError.keyNotFound             
+      219 +            }                                                 
+      220 +                                                              
+      221 +            // Ed25519 raw key is 32 bytes                    
+      222 +            if keyData.count == 32 {                          
+      223 +                let privateKey = try Curve25519.Signing.Privat
+          +eKey(rawRepresentation: keyData)                              
+      224 +                return .ed25519(username: settings.username, p
+          +rivateKey: privateKey)                                        
+      225 +            }                                                 
+      226 +                                                              
+      227 +            // Fallback: try RSA                              
+      228 +            let rsaKey = try Insecure.RSA.PrivateKey(rawRepres
+          +entation: keyData)                                            
+      229 +            return .rsa(username: settings.username, privateKe
+          +y: rsaKey)                                                    
+      230          }
+      231      }
+      232  }
+      233 +                                                              
+      234 +enum SSHKeyAuthError: LocalizedError {                        
+      235 +    case keyNotFound                                          
+      236 +                                                              
+      237 +    var errorDescription: String? {                           
+      238 +        switch self {                                         
+      239 +        case .keyNotFound:                                    
+      240 +            return "SSH key not found in Keychain — try regene
+          +rating"                                                       
+      241 +        }                                                     
+      242 +    }                                                         
+      243 +}                                                             
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+
+⏺ Phase 5: ViewModels. Creating ProfileListViewModel, ProfileEditorViewModel,
+  RemoteFileBrowserViewModel, and modifying SessionViewModel.
+
+⏺ Write(Claudette/ViewModels/ProfileListViewModel.swift)
+  ⎿  Wrote 57 lines to Claudette/ViewModels/ProfileListViewModel.swift
+       1 import Foundation
+       2 import os
+       3 
+       4 @MainActor
+       5 final class ProfileListViewModel: ObservableObject {
+       6     @Published var profiles: [ServerProfile] = []
+       7     @Published var errorMessage: String?
+       8 
+       9     private let profileStore: ProfileStoreProtocol
+      10     private let logger: Logger
+     … +47 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/ViewModels/ProfileEditorViewModel.swift)
+  ⎿  Wrote 213 lines to Claudette/ViewModels/ProfileEditorViewModel.swift
+       1 import Citadel
+       2 import Foundation
+       3 import NIOSSH
+       4 import os
+       5 
+       6 @MainActor
+       7 final class ProfileEditorViewModel: ObservableObject {
+       8     @Published var profileName: String = ""
+       9     @Published var host: String = ""
+      10     @Published var port: String = ""
+     … +203 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/ViewModels/RemoteFileBrowserViewModel.swift)
+  ⎿  Wrote 186 lines to
+     Claudette/ViewModels/RemoteFileBrowserViewModel.swift
+       1 import Citadel
+       2 import Foundation
+       3 import NIOSSH
+       4 import os
+       5 
+       6 @MainActor
+       7 final class RemoteFileBrowserViewModel: ObservableObject {
+       8     @Published var currentPath: String = ""
+       9     @Published var entries: [RemoteFileEntry] = []
+      10     @Published var isLoading: Bool = false
+     … +176 lines (ctrl+o to expand)
+  ⎿  Found 9 new diagnostic issues in 2 files (ctrl+o to expand)
+
+⏺ Now update SessionViewModel for TOFU host key verification.
+
+⏺ Write(Claudette/ViewModels/SessionViewModel.swift)
+  ⎿  Added 77 lines, removed 6 lines
+        1 +import Citadel                                                
+        2  import Foundation
+        3 +import NIOSSH                                                 
+        4  import os
+        5  
+        6 +struct HostKeyAlertState: Identifiable {                      
+        7 +    let id = UUID()                                           
+        8 +    let result: HostKeyVerificationResult                     
+        9 +    let fingerprint: String                                   
+       10 +    let hostIdentifier: String                                
+       11 +    let continuation: CheckedContinuation<Bool, Never>        
+       12 +}                                                             
+       13 +                                                              
+       14  @MainActor
+        5 -final class SessionViewModel: ObservableObject {              
+       15 +final class SessionViewModel: ObservableObject, HostKeyVerific
+          +ationDelegate {                                               
+       16      let connectionManager: SSHConnectionManager
+       17      let settings: ConnectionSettings
+       18 +    let profile: ServerProfile                                
+       19  
+       20 +    @Published var hostKeyAlert: HostKeyAlertState?           
+       21 +                                                              
+       22      private let keychainService: KeychainServiceProtocol
+       23 +    private let hostKeyValidator: TOFUHostKeyValidator        
+       24      private let logger: Logger
+       25  
+       26      init(
+       27          settings: ConnectionSettings,
+       28 +        profile: ServerProfile,                               
+       29          connectionManager: SSHConnectionManager,
+       30          keychainService: KeychainServiceProtocol,
+       31 +        hostKeyValidator: TOFUHostKeyValidator,               
+       32          logger: Logger
+       33      ) {
+       34          self.settings = settings
+       35 +        self.profile = profile                                
+       36          self.connectionManager = connectionManager
+       37          self.keychainService = keychainService
+       38 +        self.hostKeyValidator = hostKeyValidator              
+       39          self.logger = logger
+       40 +                                                              
+       41 +        hostKeyValidator.delegate = self                      
+       42      }
+       43  
+       44      func connect() {
+       45          let credential: String
+       46          switch settings.authMethod {
+       47          case .password:
+       28 -            let account = settings.username + "@" + settings.h
+          -ost                                                           
+       29 -            credential = keychainService.retrievePassword(acco
+          -unt: account) ?? ""                                           
+       30 -        case .privateKey(let keyTag):                         
+       31 -            credential = keychainService.retrievePassword(acco
+          -unt: keyTag) ?? ""                                            
+       48 +            credential = keychainService.retrievePassword(prof
+          +ileId: profile.id) ?? ""                                      
+       49 +        case .generatedKey, .importedKey:                     
+       50 +            credential = ""                                   
+       51          }
+       52  
+       53 +        let validator = SSHHostKeyValidator.custom { [hostKeyV
+          +alidator, settings] host, key in                              
+       54 +            let hostString: String                            
+       55 +            switch host {                                     
+       56 +            case .hostname(let name, port: _):                
+       57 +                hostString = name                             
+       58 +            case .ipAddress(let addr, port: _):               
+       59 +                hostString = addr                             
+       60 +            @unknown default:                                 
+       61 +                hostString = String(describing: host)         
+       62 +            }                                                 
+       63 +            return await hostKeyValidator.validate(           
+       64 +                host: hostString,                             
+       65 +                port: settings.port,                          
+       66 +                publicKey: key                                
+       67 +            )                                                 
+       68 +        }                                                     
+       69 +                                                              
+       70          logger.info("Initiating connection to \(self.settings.
+           host, privacy: .public)")
+       35 -        connectionManager.connect(settings: settings, credenti
+          -al: credential)                                               
+       71 +        connectionManager.connect(                            
+       72 +            settings: settings,                               
+       73 +            credential: credential,                           
+       74 +            hostKeyValidator: validator                       
+       75 +        )                                                     
+       76      }
+       77  
+       78      func disconnect() {
+       79          logger.info("User requested disconnect from \(self.set
+           tings.host, privacy: .public)")
+       80          connectionManager.disconnect()
+       81      }
+       82 +                                                              
+       83 +    // MARK: - HostKeyVerificationDelegate                    
+       84 +                                                              
+       85 +    nonisolated func verifyHostKey(                           
+       86 +        result: HostKeyVerificationResult,                    
+       87 +        fingerprint: String,                                  
+       88 +        hostIdentifier: String                                
+       89 +    ) async -> Bool {                                         
+       90 +        await withCheckedContinuation { continuation in       
+       91 +            Task { @MainActor in                              
+       92 +                self.hostKeyAlert = HostKeyAlertState(        
+       93 +                    result: result,                           
+       94 +                    fingerprint: fingerprint,                 
+       95 +                    hostIdentifier: hostIdentifier,           
+       96 +                    continuation: continuation                
+       97 +                )                                             
+       98 +            }                                                 
+       99 +        }                                                     
+      100 +    }                                                         
+      101 +                                                              
+      102 +    func acceptHostKey() {                                    
+      103 +        guard let alert = hostKeyAlert else { return }        
+      104 +        hostKeyAlert = nil                                    
+      105 +        alert.continuation.resume(returning: true)            
+      106 +    }                                                         
+      107 +                                                              
+      108 +    func rejectHostKey() {                                    
+      109 +        guard let alert = hostKeyAlert else { return }        
+      110 +        hostKeyAlert = nil                                    
+      111 +        alert.continuation.resume(returning: false)           
+      112 +    }                                                         
+      113  }
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+
+⏺ Phase 6: Views. Creating all new views and modifying SessionView.
+
+⏺ Write(Claudette/Views/ProfileListView.swift)
+  ⎿  Wrote 118 lines to Claudette/Views/ProfileListView.swift
+       1 import SwiftUI
+       2 
+       3 struct ProfileListView: View {
+       4     @ObservedObject var viewModel: ProfileListViewModel
+       5     let onSelectProfile: (ServerProfile) -> Void
+       6     let onEditProfile: (ServerProfile?) -> Void
+       7 
+       8     var body: some View {
+       9         Group {
+      10             if viewModel.profiles.isEmpty {
+     … +108 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Views/ProfileEditorView.swift)
+  ⎿  Wrote 145 lines to Claudette/Views/ProfileEditorView.swift
+       1 import SwiftUI
+       2 
+       3 struct ProfileEditorView: View {
+       4     @ObservedObject var viewModel: ProfileEditorViewModel
+       5     let onSave: (ServerProfile) -> Void
+       6     let onCancel: () -> Void
+       7 
+       8     var body: some View {
+       9         NavigationStack {
+      10             Form {
+     … +135 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Views/SSHKeyManagementSection.swift)
+  ⎿  Wrote 43 lines to Claudette/Views/SSHKeyManagementSection.swift
+       1 import SwiftUI
+       2 
+       3 struct SSHKeyManagementSection: View {
+       4     @ObservedObject var viewModel: ProfileEditorViewModel
+       5 
+       6     var body: some View {
+       7         if let publicKey = viewModel.publicKeyString {
+       8             VStack(alignment: .leading, spacing: 8) {
+       9                 Text("Public Key")
+      10                     .font(.caption)
+     … +33 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Views/RemoteFileBrowserView.swift)
+  ⎿  Wrote 135 lines to Claudette/Views/RemoteFileBrowserView.swift
+       1 import SwiftUI
+       2 
+       3 struct RemoteFileBrowserView: View {
+       4     @ObservedObject var viewModel: RemoteFileBrowserViewModel
+       5     let onSelectFolder: (String) -> Void
+       6     let onCancel: () -> Void
+       7 
+       8     var body: some View {
+       9         NavigationStack {
+      10             VStack(spacing: 0) {
+     … +125 lines (ctrl+o to expand)
+
+⏺ Write(Claudette/Views/HostKeyAlertView.swift)
+  ⎿  Wrote 102 lines to Claudette/Views/HostKeyAlertView.swift
+       1 import SwiftUI
+       2 
+       3 struct HostKeyAlertView: View {
+       4     let alertState: HostKeyAlertState
+       5     let onAccept: () -> Void
+       6     let onReject: () -> Void
+       7 
+       8     var body: some View {
+       9         VStack(spacing: 20) {
+      10             switch alertState.result {
+     … +92 lines (ctrl+o to expand)
+  ⎿  Found 21 new diagnostic issues in 4 files (ctrl+o to expand)
+
+⏺ Now update SessionView to show profile name and host key alert.
+
+⏺ Write(Claudette/Views/SessionView.swift)
+  ⎿  Added 15 lines, removed 3 lines
+      51          .navigationBarBackButtonHidden(isConnected)
+      52          .toolbar {
+      53              ToolbarItem(placement: .principal) {
+      54 -                Text(viewModel.settings.host)                  
+      55 -                    .font(.caption)                            
+      56 -                    .foregroundStyle(.secondary)               
+      54 +                VStack(spacing: 1) {                           
+      55 +                    Text(viewModel.profile.name)               
+      56 +                        .font(.caption)                        
+      57 +                        .fontWeight(.medium)                   
+      58 +                    Text(viewModel.settings.host)              
+      59 +                        .font(.caption2)                       
+      60 +                        .foregroundStyle(.secondary)           
+      61 +                }                                              
+      62              }
+      63          }
+      64          .onAppear {
+      65              viewModel.connect()
+      66          }
+      67 +        .sheet(item: $viewModel.hostKeyAlert) { alertState in  
+      68 +            HostKeyAlertView(                                  
+      69 +                alertState: alertState,                        
+      70 +                onAccept: { viewModel.acceptHostKey() },       
+      71 +                onReject: { viewModel.rejectHostKey() }        
+      72 +            )                                                  
+      73 +        }                                                      
+      74      }
+      75  
+      76      private var microphoneOverlay: some View {
+  ⎿  Found 2 new diagnostic issues in 1 file (ctrl+o to expand)
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Phase 7: Integration. Rewiring ContentView and ClaudetteApp with the new
+  navigation flow and composition root.
+
+⏺ Write(Claudette/ContentView.swift)
+  ⎿  Added 121 lines, removed 11 lines
+        3  struct ContentView: View {
+        4      let config: AppConfiguration
+        5      let keychainService: KeychainServiceProtocol
+        6 +    let profileStore: ProfileStoreProtocol                    
+        7 +    let hostKeyStore: HostKeyStoreProtocol                    
+        8 +    let sshKeyService: SSHKeyServiceProtocol                  
+        9      @ObservedObject var connectionManager: SSHConnectionManage
+           r
+        7 -    @ObservedObject var connectionSettingsViewModel: Connectio
+          -nSettingsViewModel                                            
+       10 +    @ObservedObject var bonjourService: BonjourDiscoveryServic
+          +e                                                             
+       11  
+       12 +    @StateObject private var profileListViewModel: ProfileList
+          +ViewModel                                                     
+       13      @State private var navigationPath = NavigationPath()
+       14 +    @State private var showingProfileEditor = false           
+       15 +    @State private var editingProfile: ServerProfile?         
+       16 +    @State private var showingFileBrowser = false             
+       17 +    @State private var selectedProfile: ServerProfile?        
+       18  
+       19 +    init(                                                     
+       20 +        config: AppConfiguration,                             
+       21 +        keychainService: KeychainServiceProtocol,             
+       22 +        profileStore: ProfileStoreProtocol,                   
+       23 +        hostKeyStore: HostKeyStoreProtocol,                   
+       24 +        sshKeyService: SSHKeyServiceProtocol,                 
+       25 +        connectionManager: SSHConnectionManager,              
+       26 +        bonjourService: BonjourDiscoveryService               
+       27 +    ) {                                                       
+       28 +        self.config = config                                  
+       29 +        self.keychainService = keychainService                
+       30 +        self.profileStore = profileStore                      
+       31 +        self.hostKeyStore = hostKeyStore                      
+       32 +        self.sshKeyService = sshKeyService                    
+       33 +        self.connectionManager = connectionManager            
+       34 +        self.bonjourService = bonjourService                  
+       35 +                                                              
+       36 +        _profileListViewModel = StateObject(wrappedValue: Prof
+          +ileListViewModel(                                             
+       37 +            profileStore: profileStore,                       
+       38 +            logger: LoggerFactory.logger(category: "ProfileLis
+          +t")                                                           
+       39 +        ))                                                    
+       40 +    }                                                         
+       41 +                                                              
+       42      var body: some View {
+       43          NavigationStack(path: $navigationPath) {
+       13 -            ConnectionSettingsView(                           
+       14 -                viewModel: connectionSettingsViewModel,       
+       15 -                onConnect: { settings in                      
+       16 -                    navigationPath.append(settings)           
+       44 +            ProfileListView(                                  
+       45 +                viewModel: profileListViewModel,              
+       46 +                onSelectProfile: { profile in                 
+       47 +                    selectedProfile = profile                 
+       48 +                    showingFileBrowser = true                 
+       49 +                },                                            
+       50 +                onEditProfile: { profile in                   
+       51 +                    editingProfile = profile                  
+       52 +                    showingProfileEditor = true               
+       53                  }
+       54              )
+       55              .navigationDestination(for: ConnectionSettings.sel
+           f) { settings in
+       20 -                SessionView(                                  
+       21 -                    viewModel: SessionViewModel(              
+       22 -                        settings: settings,                   
+       23 -                        connectionManager: connectionManager, 
+       56 +                if let profile = selectedProfile {            
+       57 +                    let hostKeyValidator = TOFUHostKeyValidato
+          +r(                                                            
+       58 +                        hostKeyStore: hostKeyStore,           
+       59 +                        logger: LoggerFactory.logger(category:
+          + "HostKeyValidator")                                          
+       60 +                    )                                         
+       61 +                                                              
+       62 +                    SessionView(                              
+       63 +                        viewModel: SessionViewModel(          
+       64 +                            settings: settings,               
+       65 +                            profile: profile,                 
+       66 +                            connectionManager: connectionManag
+          +er,                                                           
+       67 +                            keychainService: keychainService, 
+       68 +                            hostKeyValidator: hostKeyValidator
+          +,                                                             
+       69 +                            logger: LoggerFactory.logger(categ
+          +ory: "Session")                                               
+       70 +                        ),                                    
+       71 +                        config: config                        
+       72 +                    )                                         
+       73 +                }                                             
+       74 +            }                                                 
+       75 +        }                                                     
+       76 +        .sheet(isPresented: $showingProfileEditor, onDismiss: 
+          +{                                                             
+       77 +            editingProfile = nil                              
+       78 +            profileListViewModel.loadProfiles()               
+       79 +        }) {                                                  
+       80 +            ProfileEditorView(                                
+       81 +                viewModel: ProfileEditorViewModel(            
+       82 +                    profile: editingProfile,                  
+       83 +                    profileStore: profileStore,               
+       84 +                    keychainService: keychainService,         
+       85 +                    sshKeyService: sshKeyService,             
+       86 +                    bonjourService: bonjourService,           
+       87 +                    config: config,                           
+       88 +                    logger: LoggerFactory.logger(category: "Pr
+          +ofileEditor")                                                 
+       89 +                ),                                            
+       90 +                onSave: { _ in                                
+       91 +                    showingProfileEditor = false              
+       92 +                },                                            
+       93 +                onCancel: {                                   
+       94 +                    showingProfileEditor = false              
+       95 +                }                                             
+       96 +            )                                                 
+       97 +        }                                                     
+       98 +        .fullScreenCover(isPresented: $showingFileBrowser, onD
+          +ismiss: {                                                     
+       99 +            // Clean up if user cancelled                     
+      100 +        }) {                                                  
+      101 +            if let profile = selectedProfile {                
+      102 +                let hostKeyValidator = TOFUHostKeyValidator(  
+      103 +                    hostKeyStore: hostKeyStore,               
+      104 +                    logger: LoggerFactory.logger(category: "Ho
+          +stKeyValidator")                                              
+      105 +                )                                             
+      106 +                                                              
+      107 +                RemoteFileBrowserView(                        
+      108 +                    viewModel: RemoteFileBrowserViewModel(    
+      109 +                        profile: profile,                     
+      110 +                        fileBrowserService: RemoteFileBrowserS
+          +ervice(                                                       
+      111 +                            logger: LoggerFactory.logger(categ
+          +ory: "FileBrowser")                                           
+      112 +                        ),                                    
+      113                          keychainService: keychainService,
+       25 -                        logger: LoggerFactory.logger(category:
+          - "Session")                                                   
+      114 +                        hostKeyValidator: hostKeyValidator,   
+      115 +                        logger: LoggerFactory.logger(category:
+          + "FileBrowserVM")                                             
+      116                      ),
+       27 -                    config: config                            
+      117 +                    onSelectFolder: { path in                 
+      118 +                        showingFileBrowser = false            
+      119 +                        handleFolderSelected(profile: profile,
+          + path: path)                                                  
+      120 +                    },                                        
+      121 +                    onCancel: {                               
+      122 +                        showingFileBrowser = false            
+      123 +                        selectedProfile = nil                 
+      124 +                    }                                         
+      125                  )
+      126              }
+      127          }
+      128      }
+      129 +                                                              
+      130 +    private func handleFolderSelected(profile: ServerProfile, 
+          +path: String) {                                               
+      131 +        // Update profile with last project path and connectio
+          +n time                                                        
+      132 +        var updatedProfile = profile                          
+      133 +        updatedProfile.lastProjectPath = path                 
+      134 +        updatedProfile.lastConnectedAt = Date()               
+      135 +        try? profileStore.updateProfile(updatedProfile)       
+      136 +                                                              
+      137 +        selectedProfile = updatedProfile                      
+      138 +                                                              
+      139 +        let settings = updatedProfile.toConnectionSettings(pro
+          +jectPath: path)                                               
+      140 +        navigationPath.append(settings)                       
+      141 +    }                                                         
+      142  }
+
+⏺ Write(Claudette/ClaudetteApp.swift)
+  ⎿  Added 78 lines, removed 6 lines
+       5  struct ClaudetteApp: App {
+       6      private let config: AppConfiguration
+       7      private let keychainService: KeychainServiceProtocol
+       8 +    private let profileStore: ProfileStoreProtocol             
+       9 +    private let hostKeyStore: HostKeyStoreProtocol             
+      10 +    private let sshKeyService: SSHKeyServiceProtocol           
+      11      @StateObject private var connectionManager: SSHConnectionMa
+          nager
+       9 -    @StateObject private var connectionSettingsViewModel: Conne
+         -ctionSettingsViewModel                                         
+      12 +    @StateObject private var bonjourService: BonjourDiscoverySe
+         +rvice                                                          
+      13  
+      14      init() {
+      15          let config = AppConfiguration()
+     ...
+      26          )
+      27          self.keychainService = keychainService
+      28  
+      29 +        let profileStore = ProfileStore(                       
+      30 +            logger: LoggerFactory.logger(category: "ProfileStor
+         +e")                                                            
+      31 +        )                                                      
+      32 +        self.profileStore = profileStore                       
+      33 +                                                               
+      34 +        let hostKeyStore = HostKeyStore(                       
+      35 +            logger: LoggerFactory.logger(category: "HostKeyStor
+         +e")                                                            
+      36 +        )                                                      
+      37 +        self.hostKeyStore = hostKeyStore                       
+      38 +                                                               
+      39 +        let sshKeyService = SSHKeyService(                     
+      40 +            keychainService: keychainService,                  
+      41 +            logger: LoggerFactory.logger(category: "SSHKeyServi
+         +ce")                                                           
+      42 +        )                                                      
+      43 +        self.sshKeyService = sshKeyService                     
+      44 +                                                               
+      45          let connectionManager = SSHConnectionManager(
+      46              config: config,
+      47 +            keychainService: keychainService,                  
+      48              logger: LoggerFactory.logger(category: "SSHConnecti
+          on")
+      49          )
+      50          _connectionManager = StateObject(wrappedValue: connecti
+          onManager)
+      51  
+      32 -        _connectionSettingsViewModel = StateObject(wrappedValue
+         -: ConnectionSettingsViewModel(                                 
+      33 -            keychainService: keychainService,                  
+      34 -            config: config,                                    
+      35 -            logger: LoggerFactory.logger(category: "ConnectionS
+         -ettings")                                                      
+      52 +        _bonjourService = StateObject(wrappedValue: BonjourDisc
+         +overyService(                                                  
+      53 +            serviceType: config.bonjourServiceType,            
+      54 +            domain: config.bonjourDomain,                      
+      55 +            logger: LoggerFactory.logger(category: "Bonjour")  
+      56          ))
+      57 +                                                               
+      58 +        // Migrate legacy connection settings if present       
+      59 +        Self.migrateLegacySettings(                            
+      60 +            keychainService: keychainService,                  
+      61 +            profileStore: profileStore,                        
+      62 +            logger: logger                                     
+      63 +        )                                                      
+      64      }
+      65  
+      66      var body: some Scene {
+     ...
+       68              ContentView(
+       69                  config: config,
+       70                  keychainService: keychainService,
+       71 +                profileStore: profileStore,                   
+       72 +                hostKeyStore: hostKeyStore,                   
+       73 +                sshKeyService: sshKeyService,                 
+       74                  connectionManager: connectionManager,
+       45 -                connectionSettingsViewModel: connectionSetting
+          -sViewModel                                                    
+       75 +                bonjourService: bonjourService                
+       76              )
+       77          }
+       78      }
+       79 +                                                              
+       80 +    private static func migrateLegacySettings(                
+       81 +        keychainService: KeychainService,                     
+       82 +        profileStore: ProfileStore,                           
+       83 +        logger: Logger                                        
+       84 +    ) {                                                       
+       85 +        guard let legacy = keychainService.retrieveLegacyConne
+          +ctionSettings() else {                                        
+       86 +            return                                            
+       87 +        }                                                     
+       88 +                                                              
+       89 +        logger.info("Found legacy connection settings, migrati
+          +ng...")                                                       
+       90 +                                                              
+       91 +        let legacyAccount = legacy.username + "@" + legacy.hos
+          +t                                                             
+       92 +        let legacyPassword = keychainService.retrieveLegacyPas
+          +sword(account: legacyAccount)                                 
+       93 +                                                              
+       94 +        let profile = ServerProfile(                          
+       95 +            name: legacy.host,                                
+       96 +            host: legacy.host,                                
+       97 +            port: legacy.port,                                
+       98 +            username: legacy.username,                        
+       99 +            authMethod: .password,                            
+      100 +            lastProjectPath: legacy.projectFolder             
+      101 +        )                                                     
+      102 +                                                              
+      103 +        do {                                                  
+      104 +            try profileStore.saveProfile(profile)             
+      105 +                                                              
+      106 +            if let password = legacyPassword {                
+      107 +                try keychainService.storePassword(password, pr
+          +ofileId: profile.id)                                          
+      108 +            }                                                 
+      109 +                                                              
+      110 +            // Clean up legacy data                           
+      111 +            try? keychainService.deleteLegacyConnectionSetting
+          +s()                                                           
+      112 +            if legacyPassword != nil {                        
+      113 +                try? keychainService.deleteLegacyPassword(acco
+          +unt: legacyAccount)                                           
+      114 +            }                                                 
+      115 +                                                              
+      116 +            logger.info("Successfully migrated legacy settings
+          + to profile: \(profile.name, privacy: .public)")              
+      117 +        } catch {                                             
+      118 +            logger.error("Failed to migrate legacy settings: \
+          +(error.localizedDescription)")                                
+      119 +        }                                                     
+      120 +    }                                                         
+      121  }
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Phase 8: Cleanup. Deleting old files and updating the pbxproj with all new
+  file references.
+
+  First, delete the old files.
+
+⏺ Bash(rm /Users/olorin/Documents/Projects/claudette/Claudette/Views/ConnectionS
+      ettingsView.swift
+      /Users/olorin/Documents/Projects/claudette/Claudette/ViewModels/Conne…)
+  ⎿  Done
+
+⏺ Now update the pbxproj. This is the most critical part — I need to remove
+  deleted file references and add all new files. Let me read the current state
+  first.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Now I'll write the complete updated pbxproj. This is a large edit — removing 3
+   deleted files and adding 19 new files.
+
+⏺ Write(Claudette.xcodeproj/project.pbxproj)
+  ⎿  Added 77 lines, removed 13 lines
+      22      C10000010000000000000007 /* ConnectionState.swift in Source
+          s */ = {isa = PBXBuildFile; fileRef = C10000020000000000000007 
+          /* ConnectionState.swift */; };
+      23      C10000010000000000000008 /* KeychainService.swift in Source
+          s */ = {isa = PBXBuildFile; fileRef = C10000020000000000000008 
+          /* KeychainService.swift */; };
+      24      C10000010000000000000009 /* SSHConnectionManager.swift in S
+          ources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000
+          0009 /* SSHConnectionManager.swift */; };
+      25 -    C1000001000000000000000A /* ConnectionSettingsViewModel.swi
+         -ft in Sources */ = {isa = PBXBuildFile; fileRef = C100000200000
+         -0000000000A /* ConnectionSettingsViewModel.swift */; };        
+      25      C1000001000000000000000B /* SessionViewModel.swift in Sourc
+          es */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000B
+           /* SessionViewModel.swift */; };
+      27 -    C1000001000000000000000C /* ConnectionSettingsView.swift in
+         - Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000
+         -00000C /* ConnectionSettingsView.swift */; };                  
+      26      C1000001000000000000000D /* TerminalContainerView.swift in 
+          Sources */ = {isa = PBXBuildFile; fileRef = C100000200000000000
+          0000D /* TerminalContainerView.swift */; };
+      27      C1000001000000000000000E /* SessionView.swift in Sources */
+           = {isa = PBXBuildFile; fileRef = C1000002000000000000000E /* S
+          essionView.swift */; };
+      28      C1000001000000000000000F /* SpeechRecognitionService.swift 
+          in Sources */ = {isa = PBXBuildFile; fileRef = C100000200000000
+          0000000F /* SpeechRecognitionService.swift */; };
+      31 -    C10000010000000000000010 /* ProjectEntry.swift in Sources *
+         -/ = {isa = PBXBuildFile; fileRef = C10000020000000000000010 /* 
+         -ProjectEntry.swift */; };                                      
+      29 +    D10000010000000000000001 /* ServerProfile.swift in Sources 
+         +*/ = {isa = PBXBuildFile; fileRef = D10000020000000000000001 /*
+         + ServerProfile.swift */; };                                    
+      30 +    D10000010000000000000002 /* KnownHost.swift in Sources */ =
+         + {isa = PBXBuildFile; fileRef = D10000020000000000000002 /* Kno
+         +wnHost.swift */; };                                            
+      31 +    D10000010000000000000003 /* HostKeyVerificationResult.swift
+         + in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000
+         +000000003 /* HostKeyVerificationResult.swift */; };            
+      32 +    D10000010000000000000004 /* RemoteFileEntry.swift in Source
+         +s */ = {isa = PBXBuildFile; fileRef = D10000020000000000000004 
+         +/* RemoteFileEntry.swift */; };                                
+      33 +    D10000010000000000000005 /* BonjourHost.swift in Sources */
+         + = {isa = PBXBuildFile; fileRef = D10000020000000000000005 /* B
+         +onjourHost.swift */; };                                        
+      34 +    D10000010000000000000006 /* ProfileStore.swift in Sources *
+         +/ = {isa = PBXBuildFile; fileRef = D10000020000000000000006 /* 
+         +ProfileStore.swift */; };                                      
+      35 +    D10000010000000000000007 /* HostKeyStore.swift in Sources *
+         +/ = {isa = PBXBuildFile; fileRef = D10000020000000000000007 /* 
+         +HostKeyStore.swift */; };                                      
+      36 +    D10000010000000000000008 /* SSHKeyService.swift in Sources 
+         +*/ = {isa = PBXBuildFile; fileRef = D10000020000000000000008 /*
+         + SSHKeyService.swift */; };                                    
+      37 +    D10000010000000000000009 /* TOFUHostKeyValidator.swift in S
+         +ources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000
+         +0009 /* TOFUHostKeyValidator.swift */; };                      
+      38 +    D1000001000000000000000A /* BonjourDiscoveryService.swift i
+         +n Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000
+         +000000A /* BonjourDiscoveryService.swift */; };                
+      39 +    D1000001000000000000000B /* RemoteFileBrowserService.swift 
+         +in Sources */ = {isa = PBXBuildFile; fileRef = D100000200000000
+         +0000000B /* RemoteFileBrowserService.swift */; };              
+      40 +    D1000001000000000000000C /* ProfileListViewModel.swift in S
+         +ources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000
+         +000C /* ProfileListViewModel.swift */; };                      
+      41 +    D1000001000000000000000D /* ProfileEditorViewModel.swift in
+         + Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000
+         +00000D /* ProfileEditorViewModel.swift */; };                  
+      42 +    D1000001000000000000000E /* RemoteFileBrowserViewModel.swif
+         +t in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000
+         +000000000E /* RemoteFileBrowserViewModel.swift */; };          
+      43 +    D1000001000000000000000F /* ProfileListView.swift in Source
+         +s */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000F 
+         +/* ProfileListView.swift */; };                                
+      44 +    D10000010000000000000010 /* ProfileEditorView.swift in Sour
+         +ces */ = {isa = PBXBuildFile; fileRef = D1000002000000000000001
+         +0 /* ProfileEditorView.swift */; };                            
+      45 +    D10000010000000000000011 /* SSHKeyManagementSection.swift i
+         +n Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000
+         +0000011 /* SSHKeyManagementSection.swift */; };                
+      46 +    D10000010000000000000012 /* RemoteFileBrowserView.swift in 
+         +Sources */ = {isa = PBXBuildFile; fileRef = D100000200000000000
+         +00012 /* RemoteFileBrowserView.swift */; };                    
+      47 +    D10000010000000000000013 /* HostKeyAlertView.swift in Sourc
+         +es */ = {isa = PBXBuildFile; fileRef = D10000020000000000000013
+         + /* HostKeyAlertView.swift */; };                              
+      48  /* End PBXBuildFile section */
+      49  
+      50  /* Begin PBXFileReference section */
+     ...
+      62      C10000020000000000000007 /* ConnectionState.swift */ = {isa
+           = PBXFileReference; lastKnownFileType = sourcecode.swift; path
+           = ConnectionState.swift; sourceTree = "<group>"; };
+      63      C10000020000000000000008 /* KeychainService.swift */ = {isa
+           = PBXFileReference; lastKnownFileType = sourcecode.swift; path
+           = KeychainService.swift; sourceTree = "<group>"; };
+      64      C10000020000000000000009 /* SSHConnectionManager.swift */ =
+           {isa = PBXFileReference; lastKnownFileType = sourcecode.swift;
+           path = SSHConnectionManager.swift; sourceTree = "<group>"; };
+      49 -    C1000002000000000000000A /* ConnectionSettingsViewModel.swi
+         -ft */ = {isa = PBXFileReference; lastKnownFileType = sourcecode
+         -.swift; path = ConnectionSettingsViewModel.swift; sourceTree = 
+         -"<group>"; };                                                  
+      65      C1000002000000000000000B /* SessionViewModel.swift */ = {is
+          a = PBXFileReference; lastKnownFileType = sourcecode.swift; pat
+          h = SessionViewModel.swift; sourceTree = "<group>"; };
+      51 -    C1000002000000000000000C /* ConnectionSettingsView.swift */
+         - = {isa = PBXFileReference; lastKnownFileType = sourcecode.swif
+         -t; path = ConnectionSettingsView.swift; sourceTree = "<group>";
+         - };                                                            
+      66      C1000002000000000000000D /* TerminalContainerView.swift */ 
+          = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift
+          ; path = TerminalContainerView.swift; sourceTree = "<group>"; }
+          ;
+      67      C1000002000000000000000E /* SessionView.swift */ = {isa = P
+          BXFileReference; lastKnownFileType = sourcecode.swift; path = S
+          essionView.swift; sourceTree = "<group>"; };
+      68      C1000002000000000000000F /* SpeechRecognitionService.swift 
+          */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.sw
+          ift; path = SpeechRecognitionService.swift; sourceTree = "<grou
+          p>"; };
+      55 -    C10000020000000000000010 /* ProjectEntry.swift */ = {isa = 
+         -PBXFileReference; lastKnownFileType = sourcecode.swift; path = 
+         -ProjectEntry.swift; sourceTree = "<group>"; };                 
+      69 +    D10000020000000000000001 /* ServerProfile.swift */ = {isa =
+         + PBXFileReference; lastKnownFileType = sourcecode.swift; path =
+         + ServerProfile.swift; sourceTree = "<group>"; };               
+      70 +    D10000020000000000000002 /* KnownHost.swift */ = {isa = PBX
+         +FileReference; lastKnownFileType = sourcecode.swift; path = Kno
+         +wnHost.swift; sourceTree = "<group>"; };                       
+      71 +    D10000020000000000000003 /* HostKeyVerificationResult.swift
+         + */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.s
+         +wift; path = HostKeyVerificationResult.swift; sourceTree = "<gr
+         +oup>"; };                                                      
+      72 +    D10000020000000000000004 /* RemoteFileEntry.swift */ = {isa
+         + = PBXFileReference; lastKnownFileType = sourcecode.swift; path
+         + = RemoteFileEntry.swift; sourceTree = "<group>"; };           
+      73 +    D10000020000000000000005 /* BonjourHost.swift */ = {isa = P
+         +BXFileReference; lastKnownFileType = sourcecode.swift; path = B
+         +onjourHost.swift; sourceTree = "<group>"; };                   
+      74 +    D10000020000000000000006 /* ProfileStore.swift */ = {isa = 
+         +PBXFileReference; lastKnownFileType = sourcecode.swift; path = 
+         +ProfileStore.swift; sourceTree = "<group>"; };                 
+      75 +    D10000020000000000000007 /* HostKeyStore.swift */ = {isa = 
+         +PBXFileReference; lastKnownFileType = sourcecode.swift; path = 
+         +HostKeyStore.swift; sourceTree = "<group>"; };                 
+      76 +    D10000020000000000000008 /* SSHKeyService.swift */ = {isa =
+         + PBXFileReference; lastKnownFileType = sourcecode.swift; path =
+         + SSHKeyService.swift; sourceTree = "<group>"; };               
+      77 +    D10000020000000000000009 /* TOFUHostKeyValidator.swift */ =
+         + {isa = PBXFileReference; lastKnownFileType = sourcecode.swift;
+         + path = TOFUHostKeyValidator.swift; sourceTree = "<group>"; }; 
+      78 +    D1000002000000000000000A /* BonjourDiscoveryService.swift *
+         +/ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swi
+         +ft; path = BonjourDiscoveryService.swift; sourceTree = "<group>
+         +"; };                                                          
+      79 +    D1000002000000000000000B /* RemoteFileBrowserService.swift 
+         +*/ = {isa = PBXFileReference; lastKnownFileType = sourcecode.sw
+         +ift; path = RemoteFileBrowserService.swift; sourceTree = "<grou
+         +p>"; };                                                        
+      80 +    D1000002000000000000000C /* ProfileListViewModel.swift */ =
+         + {isa = PBXFileReference; lastKnownFileType = sourcecode.swift;
+         + path = ProfileListViewModel.swift; sourceTree = "<group>"; }; 
+      81 +    D1000002000000000000000D /* ProfileEditorViewModel.swift */
+         + = {isa = PBXFileReference; lastKnownFileType = sourcecode.swif
+         +t; path = ProfileEditorViewModel.swift; sourceTree = "<group>";
+         + };                                                            
+      82 +    D1000002000000000000000E /* RemoteFileBrowserViewModel.swif
+         +t */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.
+         +swift; path = RemoteFileBrowserViewModel.swift; sourceTree = "<
+         +group>"; };                                                    
+      83 +    D1000002000000000000000F /* ProfileListView.swift */ = {isa
+         + = PBXFileReference; lastKnownFileType = sourcecode.swift; path
+         + = ProfileListView.swift; sourceTree = "<group>"; };           
+      84 +    D10000020000000000000010 /* ProfileEditorView.swift */ = {i
+         +sa = PBXFileReference; lastKnownFileType = sourcecode.swift; pa
+         +th = ProfileEditorView.swift; sourceTree = "<group>"; };       
+      85 +    D10000020000000000000011 /* SSHKeyManagementSection.swift *
+         +/ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swi
+         +ft; path = SSHKeyManagementSection.swift; sourceTree = "<group>
+         +"; };                                                          
+      86 +    D10000020000000000000012 /* RemoteFileBrowserView.swift */ 
+         += {isa = PBXFileReference; lastKnownFileType = sourcecode.swift
+         +; path = RemoteFileBrowserView.swift; sourceTree = "<group>"; }
+         +;                                                              
+      87 +    D10000020000000000000013 /* HostKeyAlertView.swift */ = {is
+         +a = PBXFileReference; lastKnownFileType = sourcecode.swift; pat
+         +h = HostKeyAlertView.swift; sourceTree = "<group>"; };         
+      88  /* End PBXFileReference section */
+      89  
+      90  /* Begin PBXFrameworksBuildPhase section */
+     ...
+      163        isa = PBXGroup;
+      164        children = (
+      165          C10000020000000000000005 /* AuthMethod.swift */,
+      166 +        D10000020000000000000005 /* BonjourHost.swift */,     
+      167          C10000020000000000000006 /* ConnectionSettings.swift *
+           /,
+      168          C10000020000000000000007 /* ConnectionState.swift */,
+      136 -        C10000020000000000000010 /* ProjectEntry.swift */,    
+      169 +        D10000020000000000000003 /* HostKeyVerificationResult.
+          +swift */,                                                     
+      170 +        D10000020000000000000002 /* KnownHost.swift */,       
+      171 +        D10000020000000000000004 /* RemoteFileEntry.swift */, 
+      172 +        D10000020000000000000001 /* ServerProfile.swift */,   
+      173        );
+      174        path = Models;
+      175        sourceTree = "<group>";
+     ...
+      177      C10000030000000000000004 /* Services */ = {
+      178        isa = PBXGroup;
+      179        children = (
+      180 +        D1000002000000000000000A /* BonjourDiscoveryService.sw
+          +ift */,                                                       
+      181 +        D10000020000000000000007 /* HostKeyStore.swift */,    
+      182          C10000020000000000000008 /* KeychainService.swift */,
+      183 +        D10000020000000000000006 /* ProfileStore.swift */,    
+      184 +        D1000002000000000000000B /* RemoteFileBrowserService.s
+          +wift */,                                                      
+      185          C10000020000000000000009 /* SSHConnectionManager.swift
+            */,
+      186 +        D10000020000000000000008 /* SSHKeyService.swift */,   
+      187          C1000002000000000000000F /* SpeechRecognitionService.s
+           wift */,
+      188 +        D10000020000000000000009 /* TOFUHostKeyValidator.swift
+          + */,                                                          
+      189        );
+      190        path = Services;
+      191        sourceTree = "<group>";
+     ...
+      193      C10000030000000000000005 /* ViewModels */ = {
+      194        isa = PBXGroup;
+      195        children = (
+      154 -        C1000002000000000000000A /* ConnectionSettingsViewMode
+          -l.swift */,                                                   
+      196 +        D1000002000000000000000D /* ProfileEditorViewModel.swi
+          +ft */,                                                        
+      197 +        D1000002000000000000000C /* ProfileListViewModel.swift
+          + */,                                                          
+      198 +        D1000002000000000000000E /* RemoteFileBrowserViewModel
+          +.swift */,                                                    
+      199          C1000002000000000000000B /* SessionViewModel.swift */,
+      200        );
+      201        path = ViewModels;
+     ...
+      204      C10000030000000000000006 /* Views */ = {
+      205        isa = PBXGroup;
+      206        children = (
+      163 -        C1000002000000000000000C /* ConnectionSettingsView.swi
+          -ft */,                                                        
+      164 -        C1000002000000000000000D /* TerminalContainerView.swif
+          -t */,                                                         
+      207 +        D10000020000000000000013 /* HostKeyAlertView.swift */,
+      208 +        D10000020000000000000010 /* ProfileEditorView.swift */
+          +,                                                             
+      209 +        D1000002000000000000000F /* ProfileListView.swift */, 
+      210 +        D10000020000000000000012 /* RemoteFileBrowserView.swif
+          +t */,                                                         
+      211          C1000002000000000000000E /* SessionView.swift */,
+      212 +        D10000020000000000000011 /* SSHKeyManagementSection.sw
+          +ift */,                                                       
+      213 +        C1000002000000000000000D /* TerminalContainerView.swif
+          +t */,                                                         
+      214        );
+      215        path = Views;
+      216        sourceTree = "<group>";
+     ...
+      304          C10000010000000000000007 /* ConnectionState.swift in S
+           ources */,
+      305          C10000010000000000000008 /* KeychainService.swift in S
+           ources */,
+      306          C10000010000000000000009 /* SSHConnectionManager.swift
+            in Sources */,
+      259 -        C1000001000000000000000A /* ConnectionSettingsViewMode
+          -l.swift in Sources */,                                        
+      307          C1000001000000000000000B /* SessionViewModel.swift in 
+           Sources */,
+      261 -        C1000001000000000000000C /* ConnectionSettingsView.swi
+          -ft in Sources */,                                             
+      308          C1000001000000000000000D /* TerminalContainerView.swif
+           t in Sources */,
+      309          C1000001000000000000000E /* SessionView.swift in Sourc
+           es */,
+      310          C1000001000000000000000F /* SpeechRecognitionService.s
+           wift in Sources */,
+      265 -        C10000010000000000000010 /* ProjectEntry.swift in Sour
+          -ces */,                                                       
+      311 +        D10000010000000000000001 /* ServerProfile.swift in Sou
+          +rces */,                                                      
+      312 +        D10000010000000000000002 /* KnownHost.swift in Sources
+          + */,                                                          
+      313 +        D10000010000000000000003 /* HostKeyVerificationResult.
+          +swift in Sources */,                                          
+      314 +        D10000010000000000000004 /* RemoteFileEntry.swift in S
+          +ources */,                                                    
+      315 +        D10000010000000000000005 /* BonjourHost.swift in Sourc
+          +es */,                                                        
+      316 +        D10000010000000000000006 /* ProfileStore.swift in Sour
+          +ces */,                                                       
+      317 +        D10000010000000000000007 /* HostKeyStore.swift in Sour
+          +ces */,                                                       
+      318 +        D10000010000000000000008 /* SSHKeyService.swift in Sou
+          +rces */,                                                      
+      319 +        D10000010000000000000009 /* TOFUHostKeyValidator.swift
+          + in Sources */,                                               
+      320 +        D1000001000000000000000A /* BonjourDiscoveryService.sw
+          +ift in Sources */,                                            
+      321 +        D1000001000000000000000B /* RemoteFileBrowserService.s
+          +wift in Sources */,                                           
+      322 +        D1000001000000000000000C /* ProfileListViewModel.swift
+          + in Sources */,                                               
+      323 +        D1000001000000000000000D /* ProfileEditorViewModel.swi
+          +ft in Sources */,                                             
+      324 +        D1000001000000000000000E /* RemoteFileBrowserViewModel
+          +.swift in Sources */,                                         
+      325 +        D1000001000000000000000F /* ProfileListView.swift in S
+          +ources */,                                                    
+      326 +        D10000010000000000000010 /* ProfileEditorView.swift in
+          + Sources */,                                                  
+      327 +        D10000010000000000000011 /* SSHKeyManagementSection.sw
+          +ift in Sources */,                                            
+      328 +        D10000010000000000000012 /* RemoteFileBrowserView.swif
+          +t in Sources */,                                              
+      329 +        D10000010000000000000013 /* HostKeyAlertView.swift in 
+          +Sources */,                                                   
+      330        );
+      331        runOnlyForDeploymentPostprocessing = 0;
+      332      };
+
+⏺ Now let me also bind the BonjourDiscoveryService's published discoveredHosts
+  to the ProfileEditorViewModel. The viewModel references bonjourHosts but
+  doesn't observe changes from the service. Let me fix that.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ I need to add a Combine subscription to forward bonjourService.discoveredHosts
+   to bonjourHosts. Let me add that.
+
+⏺ Update(Claudette/ViewModels/ProfileEditorViewModel.swift)
+  ⎿  Added 1 line
+      1  import Citadel
+      2 +import Combine                                                  
+      3  import Foundation
+      4  import NIOSSH
+      5  import os
+
+⏺ Update(Claudette/ViewModels/ProfileEditorViewModel.swift)
+  ⎿  Added 1 line
+      28      private var existingProfile: ServerProfile?
+      29      private var generatedKeyTag: String?
+      30      private var importedKeyTag: String?
+      31 +    private var cancellables = Set<AnyCancellable>()           
+      32  
+      33      enum AuthMethodSelection: String, CaseIterable {
+      34          case password = "Password"
+
+⏺ Update(Claudette/ViewModels/ProfileEditorViewModel.swift)
+  ⎿  Added 4 lines
+      74          } else {
+      75              port = String(config.sshDefaultPort)
+      76          }
+      77 +                                                               
+      78 +        bonjourService.$discoveredHosts                        
+      79 +            .receive(on: RunLoop.main)                         
+      80 +            .assign(to: &$bonjourHosts)                        
+      81      }
+      82  
+      83      func startBonjourDiscovery() {
+
+⏺ Now let me do a quick build verification to check for any compilation issues.
+
+⏺ Bash(xcodebuild -project Claudette.xcodeproj -scheme Claudette -destination
+      'generic/platform=iOS' -quiet build 2>&1 | tail -50)
+  ⎿  /Users/olorin/Documents/Projects/claudette/Claudette.xcodeproj: error:
+      Signing for "Claudette" requires a development team. Select a develop
+     ment team in the Signing & Capabilities editor. (in target 'Claudette'
+     … +2 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+⏺ That error is just code signing — not a compilation error. Let me try building
+   for the simulator instead, which doesn't require code signing.
+
+⏺ Bash(xcodebuild -project Claudette.xcodeproj -scheme Claudette -destination
+      'platform=iOS Simulator,name=iPhone 16' -quiet build 2>&1 | tail -80)
+  ⎿  Failed frontend command:
+     /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xct
+     oolchain/usr/bin/swift-frontend -frontend -c /Users/olorin/Documents/P
+     … +317 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+⏺ Good — 5 compilation errors to fix. Let me fix them all.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/ProfileListViewModel.swift)
+  ⎿  Added 1 line, removed 1 line
+      17      func loadProfiles() {
+      18          do {
+      19              profiles = try profileStore.loadProfiles()
+      20 -            logger.info("Loaded \(profiles.count) profiles")   
+      20 +            logger.info("Loaded \(self.profiles.count) profiles
+         +")                                                             
+      21          } catch {
+      22              logger.error("Failed to load profiles: \(error.loca
+          lizedDescription)")
+      23              errorMessage = "Failed to load profiles: " + error.
+          localizedDescription
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/ProfileListViewModel.swift)
+  ⎿  Added 3 lines, removed 2 lines
+      16  
+      17      func loadProfiles() {
+      18          do {
+      19 -            profiles = try profileStore.loadProfiles()         
+      20 -            logger.info("Loaded \(profiles.count) profiles")   
+      19 +            let loaded = try profileStore.loadProfiles()       
+      20 +            profiles = loaded                                  
+      21 +            logger.info("Loaded \(loaded.count) profiles")     
+      22          } catch {
+      23              logger.error("Failed to load profiles: \(error.loca
+          lizedDescription)")
+      24              errorMessage = "Failed to load profiles: " + error.
+          localizedDescription
+
+⏺ Now fix the RemoteFileBrowserViewModel issues — missing imports and
+  self.entries reference.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/RemoteFileBrowserViewModel.swift)
+  ⎿  Added 2 lines
+      1  import Citadel
+      2 +import Crypto                                                   
+      3 +import CryptoKit                                                
+      4  import Foundation
+      5  import NIOSSH
+      6  import os
+
+⏺ Now fix the self.entries reference and the SSHHostKeyValidator.custom closure
+  signature. Let me read the relevant section.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ I need to check the actual Citadel API for host key validation.
+
+⏺ Searched for 4 patterns (ctrl+o to expand)
+
+⏺ Now I understand the Citadel API. SSHHostKeyValidator.custom takes an
+  NIOSSHClientServerAuthenticationDelegate, not a closure. I need to make
+  TOFUHostKeyValidator conform to that protocol.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Good. The protocol is:
+  func validateHostKey(hostKey: NIOSSHPublicKey, validationCompletePromise: 
+  EventLoopPromise<Void>)
+
+  Let me update TOFUHostKeyValidator to conform to this, and update both
+  SessionViewModel and RemoteFileBrowserViewModel to use .custom(tofuValidator)
+  instead of a closure.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ I need to add NIOSSHClientServerAuthenticationDelegate conformance to
+  TOFUHostKeyValidator. The challenge is bridging the sync delegate method to
+  the async validate call. I also need to store host and port on the validator
+  since the delegate method only provides the key.
+
+⏺ Write(Claudette/Services/TOFUHostKeyValidator.swift)
+  ⎿  Added 57 lines, removed 48 lines
+      1  import Citadel
+      2  import CryptoKit
+      3  import Foundation
+      4 +import NIOCore                                                  
+      5  import NIOSSH
+      6  import os
+      7  
+     ...
+      13      ) async -> Bool
+      14  }
+      15  
+      15 -final class TOFUHostKeyValidator: @unchecked Sendable {        
+      16 +final class TOFUHostKeyValidator: NIOSSHClientServerAuthenticat
+         +ionDelegate, @unchecked Sendable {                             
+      17      private let hostKeyStore: HostKeyStoreProtocol
+      18      private let logger: Logger
+      19 +    var host: String = ""                                      
+      20 +    var port: Int = 22                                         
+      21      weak var delegate: HostKeyVerificationDelegate?
+      22  
+      23      init(hostKeyStore: HostKeyStoreProtocol, logger: Logger) {
+     ...
+      25          self.logger = logger
+      26      }
+      27  
+      25 -    func validate(                                             
+      26 -        host: String,                                          
+      27 -        port: Int,                                             
+      28 -        publicKey: NIOSSHPublicKey                             
+      29 -    ) async -> Bool {                                          
+      28 +    func validateHostKey(hostKey: NIOSSHPublicKey, validationCo
+         +mpletePromise: EventLoopPromise<Void>) {                       
+      29          let hostIdentifier = KnownHost.identifier(host: host, p
+          ort: port)
+      31 -        let keyData = publicKey.rawRepresentation              
+      32 -        let keyType = publicKey.keyType                        
+      30 +        let keyData = hostKey.rawRepresentation                
+      31 +        let keyType = hostKey.keyType                          
+      32  
+      34 -        let fingerprint: String                                
+      33          let digest = SHA256.hash(data: keyData)
+      36 -        fingerprint = "SHA256:" + Data(digest).base64EncodedStr
+         -ing()                                                          
+      34 +        let fingerprint = "SHA256:" + Data(digest).base64Encode
+         +dString()                                                      
+      35  
+      36          logger.info("Validating host key for \(hostIdentifier, 
+          privacy: .public): \(fingerprint, privacy: .public)")
+      37  
+     ...
+      42                  var updated = knownHost
+      43                  updated.lastSeenAt = Date()
+      44                  try? hostKeyStore.storeHost(updated)
+      47 -                return true                                    
+      45 +                validationCompletePromise.succeed(())          
+      46 +                return                                         
+      47              } else {
+      48                  // Key changed — dangerous
+      49                  let previousFingerprint = knownHost.fingerprint
+          SHA256
+     ...
+      51  
+      52                  guard let delegate else {
+      53                      logger.error("No delegate to handle key cha
+          nge verification")
+      55 -                    return false                               
+      54 +                    validationCompletePromise.fail(InvalidHostK
+         +ey())                                                          
+      55 +                    return                                     
+      56                  }
+      57  
+      58                  let result = HostKeyVerificationResult.keyChang
+          ed(
+     ...
+      60                      newFingerprint: fingerprint
+      61                  )
+      62  
+      63 -                let accepted = await delegate.verifyHostKey(   
+      64 -                    result: result,                            
+      65 -                    fingerprint: fingerprint,                  
+      66 -                    hostIdentifier: hostIdentifier             
+      67 -                )                                              
+      68 -                                                               
+      69 -                if accepted {                                  
+      70 -                    let newHost = KnownHost(                   
+      71 -                        hostIdentifier: hostIdentifier,        
+      72 -                        publicKeyData: keyData,                
+      73 -                        keyType: keyType                       
+      63 +                Task { [weak self] in                          
+      64 +                    let accepted = await delegate.verifyHostKey
+         +(                                                              
+      65 +                        result: result,                        
+      66 +                        fingerprint: fingerprint,              
+      67 +                        hostIdentifier: hostIdentifier         
+      68                      )
+      75 -                    try? hostKeyStore.storeHost(newHost)       
+      76 -                    logger.info("User accepted new key for \(ho
+         -stIdentifier, privacy: .public)")                              
+      77 -                }                                              
+      69  
+      79 -                return accepted                                
+      70 +                    if accepted {                              
+      71 +                        let newHost = KnownHost(               
+      72 +                            hostIdentifier: hostIdentifier,    
+      73 +                            publicKeyData: keyData,            
+      74 +                            keyType: keyType                   
+      75 +                        )                                      
+      76 +                        try? self?.hostKeyStore.storeHost(newHo
+         +st)                                                            
+      77 +                        self?.logger.info("User accepted new ke
+         +y for \(hostIdentifier, privacy: .public)")                    
+      78 +                        validationCompletePromise.succeed(())  
+      79 +                    } else {                                   
+      80 +                        validationCompletePromise.fail(InvalidH
+         +ostKey())                                                      
+      81 +                    }                                          
+      82 +                }                                              
+      83              }
+      84          } else {
+      85              // New host — ask user
+     ...
+       87  
+       88              guard let delegate else {
+       89                  logger.error("No delegate to handle new host v
+           erification")
+       87 -                return false                                  
+       90 +                validationCompletePromise.fail(InvalidHostKey(
+          +))                                                            
+       91 +                return                                        
+       92              }
+       93  
+       90 -            let accepted = await delegate.verifyHostKey(      
+       91 -                result: .newHost,                             
+       92 -                fingerprint: fingerprint,                     
+       93 -                hostIdentifier: hostIdentifier                
+       94 -            )                                                 
+       95 -                                                              
+       96 -            if accepted {                                     
+       97 -                let newHost = KnownHost(                      
+       98 -                    hostIdentifier: hostIdentifier,           
+       99 -                    publicKeyData: keyData,                   
+      100 -                    keyType: keyType                          
+       94 +            Task { [weak self] in                             
+       95 +                let accepted = await delegate.verifyHostKey(  
+       96 +                    result: .newHost,                         
+       97 +                    fingerprint: fingerprint,                 
+       98 +                    hostIdentifier: hostIdentifier            
+       99                  )
+      102 -                try? hostKeyStore.storeHost(newHost)          
+      103 -                logger.info("User trusted new host: \(hostIden
+          -tifier, privacy: .public)")                                   
+      104 -            }                                                 
+      100  
+      106 -            return accepted                                   
+      101 +                if accepted {                                 
+      102 +                    let newHost = KnownHost(                  
+      103 +                        hostIdentifier: hostIdentifier,       
+      104 +                        publicKeyData: keyData,               
+      105 +                        keyType: keyType                      
+      106 +                    )                                         
+      107 +                    try? self?.hostKeyStore.storeHost(newHost)
+      108 +                    self?.logger.info("User trusted new host: 
+          +\(hostIdentifier, privacy: .public)")                         
+      109 +                    validationCompletePromise.succeed(())     
+      110 +                } else {                                      
+      111 +                    validationCompletePromise.fail(InvalidHost
+          +Key())                                                        
+      112 +                }                                             
+      113 +            }                                                 
+      114          }
+      115      }
+      116 +                                                              
+      117 +    func makeValidator(host: String, port: Int) -> SSHHostKeyV
+          +alidator {                                                    
+      118 +        self.host = host                                      
+      119 +        self.port = port                                      
+      120 +        return .custom(self)                                  
+      121 +    }                                                         
+      122  }
+      123  
+      111 -/// Extension on NIOSSHPublicKey for raw data extraction      
+      124  extension NIOSSHPublicKey {
+      125      var rawRepresentation: Data {
+      114 -        // Serialize the public key to its wire format        
+      126          var buffer = ByteBufferAllocator().buffer(capacity: 25
+           6)
+      127          buffer.writeSSHHostKey(self)
+      128          let bytes = buffer.readBytes(length: buffer.readableBy
+           tes) ?? []
+     ...
+      130      }
+      131  
+      132      var keyType: String {
+      122 -        // Determine key type from the public key             
+      133          let data = rawRepresentation
+      134          guard data.count >= 4 else { return "unknown" }
+      135  
+      126 -        // SSH wire format: 4-byte length + key type string   
+      136          let typeLength = Int(data[0]) << 24 | Int(data[1]) << 
+           16 | Int(data[2]) << 8 | Int(data[3])
+      137          guard data.count >= 4 + typeLength else { return "unkn
+           own" }
+      138  
+      130 -        let typeData = data[4 ..< (4 + typeLength)]           
+      139 +        let typeData = data[4..<(4 + typeLength)]             
+      140          return String(data: typeData, encoding: .utf8) ?? "unk
+           nown"
+      141      }
+      142  }
+
+⏺ Now update SessionViewModel to use makeValidator instead of the closure.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/SessionViewModel.swift)
+  ⎿  Added 1 line, removed 16 lines
+      50              credential = ""
+      51          }
+      52  
+      53 -        let validator = SSHHostKeyValidator.custom { [hostKeyVa
+         -lidator, settings] host, key in                                
+      54 -            let hostString: String                             
+      55 -            switch host {                                      
+      56 -            case .hostname(let name, port: _):                 
+      57 -                hostString = name                              
+      58 -            case .ipAddress(let addr, port: _):                
+      59 -                hostString = addr                              
+      60 -            @unknown default:                                  
+      61 -                hostString = String(describing: host)          
+      62 -            }                                                  
+      63 -            return await hostKeyValidator.validate(            
+      64 -                host: hostString,                              
+      65 -                port: settings.port,                           
+      66 -                publicKey: key                                 
+      67 -            )                                                  
+      68 -        }                                                      
+      53 +        let validator = hostKeyValidator.makeValidator(host: se
+         +ttings.host, port: settings.port)                              
+      54  
+      55          logger.info("Initiating connection to \(settings.host, 
+          privacy: .public)")
+      56          connectionManager.connect(
+
+⏺ Now update RemoteFileBrowserViewModel similarly — replace the closure-based
+  validator and fix the self.entries issue.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/RemoteFileBrowserViewModel.swift)
+  ⎿  Added 1 line, removed 16 lines
+      47              if !fileBrowserService.isConnected {
+      48                  let authMethod = try buildAuthMethod()
+      49  
+      50 -                let validator = SSHHostKeyValidator.custom { [h
+         -ostKeyValidator] host, key in                                  
+      51 -                    let hostString: String                     
+      52 -                    switch host {                              
+      53 -                    case .hostname(let name, port: _):         
+      54 -                        hostString = name                      
+      55 -                    case .ipAddress(let addr, port: _):        
+      56 -                        hostString = addr                      
+      57 -                    @unknown default:                          
+      58 -                        hostString = String(describing: host)  
+      59 -                    }                                          
+      60 -                    return await hostKeyValidator.validate(    
+      61 -                        host: hostString,                      
+      62 -                        port: self.profile.port,               
+      63 -                        publicKey: key                         
+      64 -                    )                                          
+      65 -                }                                              
+      50 +                let validator = hostKeyValidator.makeValidator(
+         +host: profile.host, port: profile.port)                        
+      51  
+      52                  try await fileBrowserService.connect(
+      53                      host: profile.host,
+
+⏺ Now fix the entries.count self reference.
+
+⏺ Update(Claudette/ViewModels/RemoteFileBrowserViewModel.swift)
+  ⎿  Added 3 lines, removed 2 lines
+      66              }
+      67  
+      68              currentPath = startPath
+      69 -            entries = try await fileBrowserService.listDirector
+         -y(atPath: startPath)                                           
+      69 +            let loadedEntries = try await fileBrowserService.li
+         +stDirectory(atPath: startPath)                                 
+      70 +            entries = loadedEntries                            
+      71              isLoading = false
+      72  
+      72 -            logger.info("Loaded directory: \(startPath, privacy
+         -: .public) with \(entries.count) entries")                     
+      73 +            logger.info("Loaded directory: \(startPath, privacy
+         +: .public) with \(loadedEntries.count) entries")               
+      74  
+      75          } catch {
+      76              self.error = error.localizedDescription
+
+⏺ Now also remove the unused Citadel/NIOSSH imports from SessionViewModel since
+  we no longer use SSHHostKeyValidator directly there.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/SessionViewModel.swift)
+  ⎿  Removed 2 lines
+      1 -import Citadel                                                  
+      1  import Foundation
+      3 -import NIOSSH                                                   
+      2  import os
+      3  
+      4  struct HostKeyAlertState: Identifiable {
+
+⏺ Now let me rebuild to check for remaining errors.
+
+⏺ Bash(xcodebuild -project Claudette.xcodeproj -scheme Claudette -destination
+      'platform=iOS Simulator,name=iPhone 16' build 2>&1 | grep -E
+      "error:|warning:" | head -30)
+  ⎿  /Users/olorin/Documents/Projects/claudette/Claudette/ViewModels/Remote
+     FileBrowserViewModel.swift:170:73: error: extra argument 'rawRepresent
+     ation' in call
+  ⎿  (timeout 5m)
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Only one real build error left. The
+  Insecure.RSA.PrivateKey(rawRepresentation:) initializer doesn't exist. Let me
+  check the Citadel RSA API.
+
+⏺ Searched for 6 patterns, read 1 file (ctrl+o to expand)
+
+⏺ The RSA fallback is unnecessary since our SSHKeyService only generates/imports
+   Ed25519 keys. Let me remove the RSA path from both RemoteFileBrowserViewModel
+   and SSHConnectionManager.
+
+⏺ Update(Claudette/ViewModels/RemoteFileBrowserViewModel.swift)
+  ⎿  Added 2 lines, removed 6 lines
+      163              guard let keyData = keychainService.retrievePrivat
+           eKeyData(keyTag: keyTag) else {
+      164                  throw SSHKeyAuthError.keyNotFound
+      165              }
+      166 -            if keyData.count == 32 {                          
+      167 -                let privateKey = try Curve25519.Signing.Privat
+          -eKey(rawRepresentation: keyData)                              
+      168 -                return .ed25519(username: profile.username, pr
+          -ivateKey: privateKey)                                         
+      169 -            }                                                 
+      170 -            let rsaKey = try Insecure.RSA.PrivateKey(rawRepres
+          -entation: keyData)                                            
+      171 -            return .rsa(username: profile.username, privateKey
+          -: rsaKey)                                                     
+      166 +            let privateKey = try Curve25519.Signing.PrivateKey
+          +(rawRepresentation: keyData)                                  
+      167 +            return .ed25519(username: profile.username, privat
+          +eKey: privateKey)                                             
+      168          }
+      169      }
+      170  }
+
+⏺ Do the same in SSHConnectionManager.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/Services/SSHConnectionManager.swift)
+  ⎿  Added 2 lines, removed 9 lines
+      218                  throw SSHKeyAuthError.keyNotFound
+      219              }
+      220  
+      221 -            // Ed25519 raw key is 32 bytes                    
+      222 -            if keyData.count == 32 {                          
+      223 -                let privateKey = try Curve25519.Signing.Privat
+          -eKey(rawRepresentation: keyData)                              
+      224 -                return .ed25519(username: settings.username, p
+          -rivateKey: privateKey)                                        
+      225 -            }                                                 
+      226 -                                                              
+      227 -            // Fallback: try RSA                              
+      228 -            let rsaKey = try Insecure.RSA.PrivateKey(rawRepres
+          -entation: keyData)                                            
+      229 -            return .rsa(username: settings.username, privateKe
+          -y: rsaKey)                                                    
+      221 +            let privateKey = try Curve25519.Signing.PrivateKey
+          +(rawRepresentation: keyData)                                  
+      222 +            return .ed25519(username: settings.username, priva
+          +teKey: privateKey)                                            
+      223          }
+      224      }
+      225  }
+
+⏺ Also remove unused Crypto import from SSHConnectionManager since we no longer
+  use Insecure.RSA.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/Services/SSHConnectionManager.swift)
+  ⎿  Removed 1 line
+      1  import Citadel
+      2 -import Crypto                                                   
+      2  import CryptoKit
+      3  import Foundation
+      4  import NIOCore
+
+⏺ Also remove unused Crypto import from RemoteFileBrowserViewModel.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(Claudette/ViewModels/RemoteFileBrowserViewModel.swift)
+  ⎿  Removed 1 line
+      1  import Citadel
+      2 -import Crypto                                                   
+      2  import CryptoKit
+      3  import Foundation
+      4  import NIOSSH
+
+⏺ Now rebuild.
+
+⏺ Bash(xcodebuild -project Claudette.xcodeproj -scheme Claudette -destination
+      'platform=iOS Simulator,name=iPhone 16' build 2>&1 | grep -E
+      "error:|BUILD" | tail -20)
+  ⎿  /Users/olorin/Documents/Projects/claudette/Claudette/ViewModels/Sessio
+     nViewModel.swift:53:49: error: reference to property 'settings' in clo
+     sure requires explicit use of 'self' to make capture semantics explici
+     … +6 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+⏺ Only 2 errors left in SessionViewModel. Let me fix the self.settings
+  references.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ The issue is in the os.Logger interpolation, which creates closures. Let me
+  fix by capturing the host string locally.
+
+⏺ Update(Claudette/ViewModels/SessionViewModel.swift)
+  ⎿  Added 4 lines, removed 2 lines
+      50  
+      51          let validator = hostKeyValidator.makeValidator(host: se
+          ttings.host, port: settings.port)
+      52  
+      53 -        logger.info("Initiating connection to \(settings.host, 
+         -privacy: .public)")                                            
+      53 +        let hostForLog = settings.host                         
+      54 +        logger.info("Initiating connection to \(hostForLog, pri
+         +vacy: .public)")                                               
+      55          connectionManager.connect(
+      56              settings: settings,
+      57              credential: credential,
+     ...
+      60      }
+      61  
+      62      func disconnect() {
+      62 -        logger.info("User requested disconnect from \(settings.
+         -host, privacy: .public)")                                      
+      63 +        let hostForLog = settings.host                         
+      64 +        logger.info("User requested disconnect from \(hostForLo
+         +g, privacy: .public)")                                         
+      65          connectionManager.disconnect()
+      66      }
+      67  
+
+⏺ Bash(xcodebuild -project Claudette.xcodeproj -scheme Claudette -destination
+      'platform=iOS Simulator,name=iPhone 16' build 2>&1 | grep -E
+      "error:|BUILD" | tail -20)
+  ⎿  /Users/olorin/Documents/Projects/claudette/Claudette/Services/TOFUHost
+     KeyValidator.swift:54:52: error: 'InvalidHostKey' initializer is inacc
+     essible due to 'internal' protection level
+     … +28 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+  ⎿  Found 3 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Good progress — down to specific API issues. Let me fix them all. The issues
+  are:
+
+  1. InvalidHostKey is internal to Citadel — need our own error
+  2. writeSSHHostKey is internal — need different approach for raw key
+  3. serviceType needs self. in os.Logger
+  4. SFTP API uses different property names
+  5. getAttributes(atPath:) should be getAttributes(at:)
+
+  Let me fix these in parallel.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Let me check the Citadel SFTP API to understand the correct property names.
+
+⏺ Searched for 4 patterns (ctrl+o to expand)
+  ⎿  Context limit reached · /compact or /clear to continue
+
+✻ Cogitated for 15m 48s

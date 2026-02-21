@@ -4,6 +4,7 @@ struct RemoteFileBrowserView: View {
     @ObservedObject var viewModel: RemoteFileBrowserViewModel
     let onSelectFolder: (String) -> Void
     let onCancel: () -> Void
+    @State private var editingFile: RemoteFileEntry?
 
     var body: some View {
         NavigationStack {
@@ -53,6 +54,16 @@ struct RemoteFileBrowserView: View {
             }
             .task {
                 await viewModel.loadInitialDirectory()
+            }
+            .sheet(item: $editingFile) { entry in
+                RemoteFileEditorView(
+                    viewModel: RemoteFileEditorViewModel(
+                        filePath: entry.path,
+                        fileBrowserService: viewModel.fileBrowserServiceRef,
+                        config: AppConfiguration(),
+                        logger: LoggerFactory.logger(category: "FileEditor")
+                    )
+                )
             }
         }
     }
@@ -109,6 +120,8 @@ struct RemoteFileBrowserView: View {
                 Button(action: {
                     if entry.isDirectory {
                         Task { await viewModel.navigateTo(entry) }
+                    } else {
+                        editingFile = entry
                     }
                 }) {
                     HStack {
@@ -137,7 +150,6 @@ struct RemoteFileBrowserView: View {
                         }
                     }
                 }
-                .disabled(!entry.isDirectory)
             }
         }
     }

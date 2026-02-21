@@ -8,6 +8,7 @@ struct ServerProfile: Codable, Sendable, Hashable, Identifiable {
     var username: String
     var authMethod: AuthMethod
     var lastProjectPath: String?
+    var macAddress: String?
     let createdAt: Date
     var lastConnectedAt: Date?
 
@@ -19,6 +20,7 @@ struct ServerProfile: Codable, Sendable, Hashable, Identifiable {
         username: String,
         authMethod: AuthMethod,
         lastProjectPath: String? = nil,
+        macAddress: String? = nil,
         createdAt: Date = Date(),
         lastConnectedAt: Date? = nil
     ) {
@@ -29,6 +31,7 @@ struct ServerProfile: Codable, Sendable, Hashable, Identifiable {
         self.username = username
         self.authMethod = authMethod
         self.lastProjectPath = lastProjectPath
+        self.macAddress = macAddress
         self.createdAt = createdAt
         self.lastConnectedAt = lastConnectedAt
     }

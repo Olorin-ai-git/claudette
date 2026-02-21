@@ -1,5 +1,10 @@
 import Foundation
 
+struct KeyboardButtonConfig: Sendable {
+    let label: String
+    let byteSequence: [UInt8]
+}
+
 struct AppConfiguration: Sendable {
     let sshDefaultPort: Int
     let sshConnectTimeout: Int
@@ -28,6 +33,32 @@ struct AppConfiguration: Sendable {
 
     let keychainServiceName: String
     let loggerSubsystem: String
+
+    // Keyboard Accessory
+    let keyboardAccessoryHeight: CGFloat
+    let keyboardAccessoryBackgroundColor: String
+    let keyboardAccessoryButtonColor: String
+    let keyboardAccessoryButtonTextColor: String
+    let keyboardAccessoryButtons: [KeyboardButtonConfig]
+
+    // Session Persistence (tmux)
+    let tmuxEnabled: Bool
+    let tmuxSessionPrefix: String
+    let reconnectMaxAttempts: Int
+    let reconnectDelaySeconds: Double
+
+    // Network Probe
+    let networkProbeIntervalSeconds: Double
+    let networkProbeTimeoutSeconds: Double
+    let networkProbeDegradedThresholdMs: Double
+
+    // File Editor
+    let fileEditorMaxSizeBytes: Int
+    let fileEditorFontName: String
+    let fileEditorFontSize: CGFloat
+
+    /// Snippets
+    let snippetsStorageFileName: String
 
     init() {
         guard let url = Bundle.main.url(forResource: "Configuration", withExtension: "plist"),
@@ -71,11 +102,61 @@ struct AppConfiguration: Sendable {
 
         keychainServiceName = Self.required(keychain, key: "ServiceName")
         loggerSubsystem = Self.required(loggerConfig, key: "Subsystem")
+
+        // Keyboard Accessory
+        let keyboard = Self.requiredDict(root, key: "KeyboardAccessory")
+        keyboardAccessoryHeight = CGFloat(Self.required(keyboard, key: "Height") as Double)
+        keyboardAccessoryBackgroundColor = Self.required(keyboard, key: "BackgroundColor")
+        keyboardAccessoryButtonColor = Self.required(keyboard, key: "ButtonColor")
+        keyboardAccessoryButtonTextColor = Self.required(keyboard, key: "ButtonTextColor")
+
+        let buttonArray: [Any] = Self.requiredArray(keyboard, key: "Buttons")
+        keyboardAccessoryButtons = buttonArray.compactMap { element -> KeyboardButtonConfig? in
+            guard let dict = element as? [String: Any] else { return nil }
+            guard let label = dict["Label"] as? String else { return nil }
+            guard let rawBytes = dict["ByteSequence"] as? [Any] else { return nil }
+            let bytes: [UInt8] = rawBytes.compactMap { v in
+                if let i = v as? Int { return UInt8(i) }
+                if let i = v as? NSNumber { return UInt8(i.intValue) }
+                return nil
+            }
+            return KeyboardButtonConfig(label: label, byteSequence: bytes)
+        }
+
+        // Session Persistence
+        let session = Self.requiredDict(root, key: "SessionPersistence")
+        tmuxEnabled = session["TmuxEnabled"] as? Bool ?? false
+        tmuxSessionPrefix = Self.required(session, key: "TmuxSessionPrefix")
+        reconnectMaxAttempts = Self.required(session, key: "ReconnectMaxAttempts")
+        reconnectDelaySeconds = Self.required(session, key: "ReconnectDelaySeconds")
+
+        // Network Probe
+        let probe = Self.requiredDict(root, key: "NetworkProbe")
+        networkProbeIntervalSeconds = Self.required(probe, key: "IntervalSeconds")
+        networkProbeTimeoutSeconds = Self.required(probe, key: "TimeoutSeconds")
+        networkProbeDegradedThresholdMs = Self.required(probe, key: "DegradedThresholdMs")
+
+        // File Editor
+        let editor = Self.requiredDict(root, key: "FileEditor")
+        fileEditorMaxSizeBytes = Self.required(editor, key: "MaxFileSizeBytes")
+        fileEditorFontName = Self.required(editor, key: "FontName")
+        fileEditorFontSize = CGFloat(Self.required(editor, key: "FontSize") as Double)
+
+        // Snippets
+        let snippets = Self.requiredDict(root, key: "Snippets")
+        snippetsStorageFileName = Self.required(snippets, key: "StorageFileName")
     }
 
     private static func requiredDict(_ dict: [String: Any], key: String) -> [String: Any] {
         guard let value = dict[key] as? [String: Any] else {
             fatalError("Missing required configuration section: \(key)")
+        }
+        return value
+    }
+
+    private static func requiredArray(_ dict: [String: Any], key: String) -> [Any] {
+        guard let value = dict[key] as? [Any] else {
+            fatalError("Missing required configuration array: \(key)")
         }
         return value
     }

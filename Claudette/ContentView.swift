@@ -1,5 +1,13 @@
 import SwiftUI
 
+/// Navigation value that carries everything SessionView needs.
+/// Using a single Hashable value avoids the `@State selectedProfile` race
+/// where `selectedProfile` could be nil when the destination first renders.
+private struct SessionDestination: Hashable {
+    let settings: ConnectionSettings
+    let profile: ServerProfile
+}
+
 struct ContentView: View {
     let config: AppConfiguration
     let keychainService: KeychainServiceProtocol
@@ -15,8 +23,11 @@ struct ContentView: View {
     @State private var editingProfile: ServerProfile?
     @State private var showingFileBrowser = false
     @State private var showingPathInput = false
-    @State private var selectedProfile: ServerProfile?
+    @State private var pendingProfile: ServerProfile?
     @State private var manualPath: String = ""
+    /// Owned here so it survives navigationDestination re-evaluations that would otherwise
+    /// release the SessionViewModel mid-connection and nil-out the TOFUHostKeyValidator delegate.
+    @State private var activeSessionViewModel: SessionViewModel?
 
     init(
         config: AppConfiguration,
@@ -46,37 +57,18 @@ struct ContentView: View {
             ProfileListView(
                 viewModel: profileListViewModel,
                 onSelectProfile: { profile in
-                    selectedProfile = profile
-                    if let lastPath = profile.lastProjectPath, !lastPath.isEmpty {
-                        handleFolderSelected(profile: profile, path: lastPath)
-                    } else {
-                        manualPath = ""
-                        showingPathInput = true
-                    }
+                    pendingProfile = profile
+                    manualPath = profile.lastProjectPath ?? ""
+                    showingPathInput = true
                 },
                 onEditProfile: { profile in
                     editingProfile = profile
                     showingProfileEditor = true
                 }
             )
-            .navigationDestination(for: ConnectionSettings.self) { settings in
-                if let profile = selectedProfile {
-                    let hostKeyValidator = TOFUHostKeyValidator(
-                        hostKeyStore: hostKeyStore,
-                        logger: LoggerFactory.logger(category: "HostKeyValidator")
-                    )
-
-                    SessionView(
-                        viewModel: SessionViewModel(
-                            settings: settings,
-                            profile: profile,
-                            connectionManager: connectionManager,
-                            keychainService: keychainService,
-                            hostKeyValidator: hostKeyValidator,
-                            logger: LoggerFactory.logger(category: "Session")
-                        ),
-                        config: config
-                    )
+            .navigationDestination(for: SessionDestination.self) { _ in
+                if let viewModel = activeSessionViewModel {
+                    SessionView(viewModel: viewModel, config: config)
                 }
             }
         }
@@ -107,7 +99,7 @@ struct ContentView: View {
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
             Button("Connect") {
-                if let profile = selectedProfile, !manualPath.isEmpty {
+                if let profile = pendingProfile, !manualPath.isEmpty {
                     handleFolderSelected(profile: profile, path: manualPath)
                 }
             }
@@ -115,15 +107,13 @@ struct ContentView: View {
                 showingFileBrowser = true
             }
             Button("Cancel", role: .cancel) {
-                selectedProfile = nil
+                pendingProfile = nil
             }
         } message: {
             Text("Enter the absolute path to your project folder, or browse the server.")
         }
-        .fullScreenCover(isPresented: $showingFileBrowser, onDismiss: {
-            // Clean up if user cancelled
-        }) {
-            if let profile = selectedProfile {
+        .fullScreenCover(isPresented: $showingFileBrowser, onDismiss: {}) {
+            if let profile = pendingProfile {
                 FileBrowserWrapper(
                     profile: profile,
                     keychainService: keychainService,
@@ -134,7 +124,7 @@ struct ContentView: View {
                     },
                     onCancel: {
                         showingFileBrowser = false
-                        selectedProfile = nil
+                        pendingProfile = nil
                     }
                 )
             }
@@ -142,16 +132,34 @@ struct ContentView: View {
     }
 
     private func handleFolderSelected(profile: ServerProfile, path: String) {
-        // Update profile with last project path and connection time
         var updatedProfile = profile
         updatedProfile.lastProjectPath = path
         updatedProfile.lastConnectedAt = Date()
         try? profileStore.updateProfile(updatedProfile)
 
-        selectedProfile = updatedProfile
-
         let settings = updatedProfile.toConnectionSettings(projectPath: path)
-        navigationPath.append(settings)
+
+        let hostKeyValidator = TOFUHostKeyValidator(
+            hostKeyStore: hostKeyStore,
+            logger: LoggerFactory.logger(category: "HostKeyValidator")
+        )
+        let viewModel = SessionViewModel(
+            settings: settings,
+            profile: updatedProfile,
+            connectionManager: connectionManager,
+            keychainService: keychainService,
+            hostKeyStore: hostKeyStore,
+            hostKeyValidator: hostKeyValidator,
+            logger: LoggerFactory.logger(category: "Session")
+        )
+        // Store in @State so it outlives navigationDestination re-evaluations.
+        // Defer the navigation append one runloop so SwiftUI commits activeSessionViewModel
+        // before the navigationDestination closure evaluates.
+        activeSessionViewModel = viewModel
+        let destination = SessionDestination(settings: settings, profile: updatedProfile)
+        DispatchQueue.main.async {
+            navigationPath.append(destination)
+        }
     }
 }
 

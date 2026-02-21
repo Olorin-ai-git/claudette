@@ -18,7 +18,11 @@ final class RemoteFileBrowserViewModel: ObservableObject {
         return components
     }
 
-    private let fileBrowserService: RemoteFileBrowserService
+    let fileBrowserServiceRef: RemoteFileBrowserService
+    private var fileBrowserService: RemoteFileBrowserService {
+        fileBrowserServiceRef
+    }
+
     private let profile: ServerProfile
     private let keychainService: KeychainServiceProtocol
     private let hostKeyValidator: TOFUHostKeyValidator
@@ -32,7 +36,7 @@ final class RemoteFileBrowserViewModel: ObservableObject {
         logger: Logger
     ) {
         self.profile = profile
-        self.fileBrowserService = fileBrowserService
+        fileBrowserServiceRef = fileBrowserService
         self.keychainService = keychainService
         self.hostKeyValidator = hostKeyValidator
         self.logger = logger

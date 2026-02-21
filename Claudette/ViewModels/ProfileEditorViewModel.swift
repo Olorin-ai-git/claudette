@@ -11,6 +11,7 @@ final class ProfileEditorViewModel: ObservableObject {
     @Published var port: String = ""
     @Published var username: String = ""
     @Published var password: String = ""
+    @Published var macAddress: String = ""
     @Published var authMethodSelection: AuthMethodSelection = .password
     @Published var validationError: String?
 
@@ -57,6 +58,7 @@ final class ProfileEditorViewModel: ObservableObject {
             host = profile.host
             port = String(profile.port)
             username = profile.username
+            macAddress = profile.macAddress ?? ""
 
             switch profile.authMethod {
             case .password:
@@ -183,6 +185,7 @@ final class ProfileEditorViewModel: ObservableObject {
             }
         }
 
+        let trimmedMac = macAddress.trimmingCharacters(in: .whitespaces)
         let profile: ServerProfile
         if var existing = existingProfile {
             existing.name = profileName.trimmingCharacters(in: .whitespaces)
@@ -190,6 +193,7 @@ final class ProfileEditorViewModel: ObservableObject {
             existing.port = portNum
             existing.username = username.trimmingCharacters(in: .whitespaces)
             existing.authMethod = authMethod
+            existing.macAddress = trimmedMac.isEmpty ? nil : trimmedMac
             profile = existing
         } else {
             profile = ServerProfile(
@@ -197,7 +201,8 @@ final class ProfileEditorViewModel: ObservableObject {
                 host: host.trimmingCharacters(in: .whitespaces),
                 port: portNum,
                 username: username.trimmingCharacters(in: .whitespaces),
-                authMethod: authMethod
+                authMethod: authMethod,
+                macAddress: trimmedMac.isEmpty ? nil : trimmedMac
             )
         }
 
