@@ -3,11 +3,10 @@ import Foundation
 struct AppConfiguration: Sendable {
     let sshDefaultPort: Int
     let sshConnectTimeout: Int
-    let sshDefaultHost: String
-    let sshDefaultUsername: String
     let sshCommand: String
-    let sshProjectsBasePath: String
-    let sshProjectFolders: [String]
+
+    let bonjourServiceType: String
+    let bonjourDomain: String
 
     let terminalFontName: String
     let terminalFontSize: CGFloat
@@ -30,17 +29,17 @@ struct AppConfiguration: Sendable {
         }
 
         let ssh = Self.requiredDict(root, key: "SSH")
+        let bonjour = Self.requiredDict(root, key: "Bonjour")
         let terminal = Self.requiredDict(root, key: "Terminal")
         let keychain = Self.requiredDict(root, key: "Keychain")
         let loggerConfig = Self.requiredDict(root, key: "Logger")
 
         sshDefaultPort = Self.required(ssh, key: "DefaultPort")
         sshConnectTimeout = Self.required(ssh, key: "ConnectTimeoutSeconds")
-        sshDefaultHost = Self.required(ssh, key: "DefaultHost")
-        sshDefaultUsername = Self.required(ssh, key: "DefaultUsername")
         sshCommand = Self.required(ssh, key: "Command")
-        sshProjectsBasePath = Self.required(ssh, key: "ProjectsBasePath")
-        sshProjectFolders = Self.required(ssh, key: "ProjectFolders")
+
+        bonjourServiceType = Self.required(bonjour, key: "ServiceType")
+        bonjourDomain = Self.required(bonjour, key: "Domain")
 
         terminalFontName = Self.required(terminal, key: "FontName")
         terminalFontSize = CGFloat(Self.required(terminal, key: "FontSize") as Double)

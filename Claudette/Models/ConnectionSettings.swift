@@ -5,5 +5,5 @@ struct ConnectionSettings: Codable, Sendable, Hashable {
     var port: Int
     var username: String
     var authMethod: AuthMethod
-    var projectFolder: String
+    var projectPath: String
 }

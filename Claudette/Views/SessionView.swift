@@ -51,13 +51,25 @@ struct SessionView: View {
         .navigationBarBackButtonHidden(isConnected)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(viewModel.settings.host)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(spacing: 1) {
+                    Text(viewModel.profile.name)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                    Text(viewModel.settings.host)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .onAppear {
             viewModel.connect()
+        }
+        .sheet(item: $viewModel.hostKeyAlert) { alertState in
+            HostKeyAlertView(
+                alertState: alertState,
+                onAccept: { viewModel.acceptHostKey() },
+                onReject: { viewModel.rejectHostKey() }
+            )
         }
     }
 

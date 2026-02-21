@@ -22,13 +22,29 @@
 		C10000010000000000000007 /* ConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000007 /* ConnectionState.swift */; };
 		C10000010000000000000008 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000008 /* KeychainService.swift */; };
 		C10000010000000000000009 /* SSHConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000009 /* SSHConnectionManager.swift */; };
-		C1000001000000000000000A /* ConnectionSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000A /* ConnectionSettingsViewModel.swift */; };
 		C1000001000000000000000B /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000B /* SessionViewModel.swift */; };
-		C1000001000000000000000C /* ConnectionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000C /* ConnectionSettingsView.swift */; };
 		C1000001000000000000000D /* TerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000D /* TerminalContainerView.swift */; };
 		C1000001000000000000000E /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000E /* SessionView.swift */; };
 		C1000001000000000000000F /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000002000000000000000F /* SpeechRecognitionService.swift */; };
-		C10000010000000000000010 /* ProjectEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000010 /* ProjectEntry.swift */; };
+		D10000010000000000000001 /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000001 /* ServerProfile.swift */; };
+		D10000010000000000000002 /* KnownHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000002 /* KnownHost.swift */; };
+		D10000010000000000000003 /* HostKeyVerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000003 /* HostKeyVerificationResult.swift */; };
+		D10000010000000000000004 /* RemoteFileEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000004 /* RemoteFileEntry.swift */; };
+		D10000010000000000000005 /* BonjourHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000005 /* BonjourHost.swift */; };
+		D10000010000000000000006 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000006 /* ProfileStore.swift */; };
+		D10000010000000000000007 /* HostKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000007 /* HostKeyStore.swift */; };
+		D10000010000000000000008 /* SSHKeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000008 /* SSHKeyService.swift */; };
+		D10000010000000000000009 /* TOFUHostKeyValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000009 /* TOFUHostKeyValidator.swift */; };
+		D1000001000000000000000A /* BonjourDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000A /* BonjourDiscoveryService.swift */; };
+		D1000001000000000000000B /* RemoteFileBrowserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000B /* RemoteFileBrowserService.swift */; };
+		D1000001000000000000000C /* ProfileListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000C /* ProfileListViewModel.swift */; };
+		D1000001000000000000000D /* ProfileEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000D /* ProfileEditorViewModel.swift */; };
+		D1000001000000000000000E /* RemoteFileBrowserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000E /* RemoteFileBrowserViewModel.swift */; };
+		D1000001000000000000000F /* ProfileListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000002000000000000000F /* ProfileListView.swift */; };
+		D10000010000000000000010 /* ProfileEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000010 /* ProfileEditorView.swift */; };
+		D10000010000000000000011 /* SSHKeyManagementSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000011 /* SSHKeyManagementSection.swift */; };
+		D10000010000000000000012 /* RemoteFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000012 /* RemoteFileBrowserView.swift */; };
+		D10000010000000000000013 /* HostKeyAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000013 /* HostKeyAlertView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,13 +62,29 @@
 		C10000020000000000000007 /* ConnectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionState.swift; sourceTree = "<group>"; };
 		C10000020000000000000008 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		C10000020000000000000009 /* SSHConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnectionManager.swift; sourceTree = "<group>"; };
-		C1000002000000000000000A /* ConnectionSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSettingsViewModel.swift; sourceTree = "<group>"; };
 		C1000002000000000000000B /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
-		C1000002000000000000000C /* ConnectionSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSettingsView.swift; sourceTree = "<group>"; };
 		C1000002000000000000000D /* TerminalContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainerView.swift; sourceTree = "<group>"; };
 		C1000002000000000000000E /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
 		C1000002000000000000000F /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
-		C10000020000000000000010 /* ProjectEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEntry.swift; sourceTree = "<group>"; };
+		D10000020000000000000001 /* ServerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerProfile.swift; sourceTree = "<group>"; };
+		D10000020000000000000002 /* KnownHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownHost.swift; sourceTree = "<group>"; };
+		D10000020000000000000003 /* HostKeyVerificationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyVerificationResult.swift; sourceTree = "<group>"; };
+		D10000020000000000000004 /* RemoteFileEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileEntry.swift; sourceTree = "<group>"; };
+		D10000020000000000000005 /* BonjourHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourHost.swift; sourceTree = "<group>"; };
+		D10000020000000000000006 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
+		D10000020000000000000007 /* HostKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyStore.swift; sourceTree = "<group>"; };
+		D10000020000000000000008 /* SSHKeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyService.swift; sourceTree = "<group>"; };
+		D10000020000000000000009 /* TOFUHostKeyValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOFUHostKeyValidator.swift; sourceTree = "<group>"; };
+		D1000002000000000000000A /* BonjourDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscoveryService.swift; sourceTree = "<group>"; };
+		D1000002000000000000000B /* RemoteFileBrowserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileBrowserService.swift; sourceTree = "<group>"; };
+		D1000002000000000000000C /* ProfileListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileListViewModel.swift; sourceTree = "<group>"; };
+		D1000002000000000000000D /* ProfileEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditorViewModel.swift; sourceTree = "<group>"; };
+		D1000002000000000000000E /* RemoteFileBrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileBrowserViewModel.swift; sourceTree = "<group>"; };
+		D1000002000000000000000F /* ProfileListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileListView.swift; sourceTree = "<group>"; };
+		D10000020000000000000010 /* ProfileEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditorView.swift; sourceTree = "<group>"; };
+		D10000020000000000000011 /* SSHKeyManagementSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyManagementSection.swift; sourceTree = "<group>"; };
+		D10000020000000000000012 /* RemoteFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileBrowserView.swift; sourceTree = "<group>"; };
+		D10000020000000000000013 /* HostKeyAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyAlertView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,9 +163,13 @@
 			isa = PBXGroup;
 			children = (
 				C10000020000000000000005 /* AuthMethod.swift */,
+				D10000020000000000000005 /* BonjourHost.swift */,
 				C10000020000000000000006 /* ConnectionSettings.swift */,
 				C10000020000000000000007 /* ConnectionState.swift */,
-				C10000020000000000000010 /* ProjectEntry.swift */,
+				D10000020000000000000003 /* HostKeyVerificationResult.swift */,
+				D10000020000000000000002 /* KnownHost.swift */,
+				D10000020000000000000004 /* RemoteFileEntry.swift */,
+				D10000020000000000000001 /* ServerProfile.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -141,9 +177,15 @@
 		C10000030000000000000004 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D1000002000000000000000A /* BonjourDiscoveryService.swift */,
+				D10000020000000000000007 /* HostKeyStore.swift */,
 				C10000020000000000000008 /* KeychainService.swift */,
+				D10000020000000000000006 /* ProfileStore.swift */,
+				D1000002000000000000000B /* RemoteFileBrowserService.swift */,
 				C10000020000000000000009 /* SSHConnectionManager.swift */,
+				D10000020000000000000008 /* SSHKeyService.swift */,
 				C1000002000000000000000F /* SpeechRecognitionService.swift */,
+				D10000020000000000000009 /* TOFUHostKeyValidator.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -151,7 +193,9 @@
 		C10000030000000000000005 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				C1000002000000000000000A /* ConnectionSettingsViewModel.swift */,
+				D1000002000000000000000D /* ProfileEditorViewModel.swift */,
+				D1000002000000000000000C /* ProfileListViewModel.swift */,
+				D1000002000000000000000E /* RemoteFileBrowserViewModel.swift */,
 				C1000002000000000000000B /* SessionViewModel.swift */,
 			);
 			path = ViewModels;
@@ -160,9 +204,13 @@
 		C10000030000000000000006 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				C1000002000000000000000C /* ConnectionSettingsView.swift */,
-				C1000002000000000000000D /* TerminalContainerView.swift */,
+				D10000020000000000000013 /* HostKeyAlertView.swift */,
+				D10000020000000000000010 /* ProfileEditorView.swift */,
+				D1000002000000000000000F /* ProfileListView.swift */,
+				D10000020000000000000012 /* RemoteFileBrowserView.swift */,
 				C1000002000000000000000E /* SessionView.swift */,
+				D10000020000000000000011 /* SSHKeyManagementSection.swift */,
+				C1000002000000000000000D /* TerminalContainerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -256,13 +304,29 @@
 				C10000010000000000000007 /* ConnectionState.swift in Sources */,
 				C10000010000000000000008 /* KeychainService.swift in Sources */,
 				C10000010000000000000009 /* SSHConnectionManager.swift in Sources */,
-				C1000001000000000000000A /* ConnectionSettingsViewModel.swift in Sources */,
 				C1000001000000000000000B /* SessionViewModel.swift in Sources */,
-				C1000001000000000000000C /* ConnectionSettingsView.swift in Sources */,
 				C1000001000000000000000D /* TerminalContainerView.swift in Sources */,
 				C1000001000000000000000E /* SessionView.swift in Sources */,
 				C1000001000000000000000F /* SpeechRecognitionService.swift in Sources */,
-				C10000010000000000000010 /* ProjectEntry.swift in Sources */,
+				D10000010000000000000001 /* ServerProfile.swift in Sources */,
+				D10000010000000000000002 /* KnownHost.swift in Sources */,
+				D10000010000000000000003 /* HostKeyVerificationResult.swift in Sources */,
+				D10000010000000000000004 /* RemoteFileEntry.swift in Sources */,
+				D10000010000000000000005 /* BonjourHost.swift in Sources */,
+				D10000010000000000000006 /* ProfileStore.swift in Sources */,
+				D10000010000000000000007 /* HostKeyStore.swift in Sources */,
+				D10000010000000000000008 /* SSHKeyService.swift in Sources */,
+				D10000010000000000000009 /* TOFUHostKeyValidator.swift in Sources */,
+				D1000001000000000000000A /* BonjourDiscoveryService.swift in Sources */,
+				D1000001000000000000000B /* RemoteFileBrowserService.swift in Sources */,
+				D1000001000000000000000C /* ProfileListViewModel.swift in Sources */,
+				D1000001000000000000000D /* ProfileEditorViewModel.swift in Sources */,
+				D1000001000000000000000E /* RemoteFileBrowserViewModel.swift in Sources */,
+				D1000001000000000000000F /* ProfileListView.swift in Sources */,
+				D10000010000000000000010 /* ProfileEditorView.swift in Sources */,
+				D10000010000000000000011 /* SSHKeyManagementSection.swift in Sources */,
+				D10000010000000000000012 /* RemoteFileBrowserView.swift in Sources */,
+				D10000010000000000000013 /* HostKeyAlertView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -404,8 +468,10 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Claudette discovers Macs on your local network running SSH.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudette uses the microphone for voice dictation to send commands to the terminal.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Claudette uses speech recognition to convert your voice into terminal commands.";
+				INFOPLIST_KEY_NSBonjourServices = "_ssh._tcp.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -435,8 +501,10 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Claudette discovers Macs on your local network running SSH.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudette uses the microphone for voice dictation to send commands to the terminal.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Claudette uses speech recognition to convert your voice into terminal commands.";
+				INFOPLIST_KEY_NSBonjourServices = "_ssh._tcp.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

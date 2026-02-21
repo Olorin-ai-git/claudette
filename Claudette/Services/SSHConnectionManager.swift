@@ -1,5 +1,5 @@
 import Citadel
-import Crypto
+import CryptoKit
 import Foundation
 import NIOCore
 import NIOSSH
@@ -10,13 +10,15 @@ final class SSHConnectionManager: ObservableObject {
     @Published private(set) var connectionState: ConnectionState = .disconnected
 
     private let config: AppConfiguration
+    private let keychainService: KeychainServiceProtocol
     private let logger: Logger
     private var stdinWriter: TTYStdinWriter?
     private var connectionTask: Task<Void, Never>?
     private weak var terminalView: TerminalView?
 
-    init(config: AppConfiguration, logger: Logger) {
+    init(config: AppConfiguration, keychainService: KeychainServiceProtocol, logger: Logger) {
         self.config = config
+        self.keychainService = keychainService
         self.logger = logger
     }
 
@@ -24,7 +26,11 @@ final class SSHConnectionManager: ObservableObject {
         terminalView = view
     }
 
-    func connect(settings: ConnectionSettings, credential: String) {
+    func connect(
+        settings: ConnectionSettings,
+        credential: String,
+        hostKeyValidator: SSHHostKeyValidator
+    ) {
         switch connectionState {
         case .connecting, .connected:
             return
@@ -32,7 +38,7 @@ final class SSHConnectionManager: ObservableObject {
             break
         }
 
-        guard !credential.isEmpty else {
+        guard !credential.isEmpty || settings.authMethod.isKeyBased else {
             connectionState = .failed(errorDescription: "Missing credential")
             return
         }
@@ -42,19 +48,21 @@ final class SSHConnectionManager: ObservableObject {
 
         let config = self.config
         let logger = self.logger
+        let keychainService = self.keychainService
 
         connectionTask = Task { [weak self] in
             do {
                 let sshAuth = try Self.buildAuthMethod(
                     settings: settings,
-                    credential: credential
+                    credential: credential,
+                    keychainService: keychainService
                 )
 
                 let client = try await SSHClient.connect(
                     host: settings.host,
                     port: settings.port,
                     authenticationMethod: sshAuth,
-                    hostKeyValidator: .acceptAnything(),
+                    hostKeyValidator: hostKeyValidator,
                     reconnect: .never,
                     connectTimeout: .seconds(Int64(config.sshConnectTimeout))
                 )
@@ -88,8 +96,7 @@ final class SSHConnectionManager: ObservableObject {
                         self?.stdinWriter = outbound
                     }
 
-                    let projectPath = config.sshProjectsBasePath + "/" + settings.projectFolder
-                    let command = "cd " + projectPath + " && " + config.sshCommand + "\n"
+                    let command = "cd " + settings.projectPath + " && " + config.sshCommand + "\n"
                     var cmdBuffer = ByteBufferAllocator().buffer(capacity: command.utf8.count)
                     cmdBuffer.writeString(command)
                     try await outbound.write(cmdBuffer)
@@ -198,14 +205,31 @@ final class SSHConnectionManager: ObservableObject {
 
     private static func buildAuthMethod(
         settings: ConnectionSettings,
-        credential: String
+        credential: String,
+        keychainService: KeychainServiceProtocol
     ) throws -> SSHAuthenticationMethod {
         switch settings.authMethod {
         case .password:
             return .passwordBased(username: settings.username, password: credential)
-        case .privateKey:
-            let privateKey = try Insecure.RSA.PrivateKey(sshRsa: credential)
-            return .rsa(username: settings.username, privateKey: privateKey)
+
+        case let .generatedKey(keyTag), let .importedKey(keyTag):
+            guard let keyData = keychainService.retrievePrivateKeyData(keyTag: keyTag) else {
+                throw SSHKeyAuthError.keyNotFound
+            }
+
+            let privateKey = try Curve25519.Signing.PrivateKey(rawRepresentation: keyData)
+            return .ed25519(username: settings.username, privateKey: privateKey)
+        }
+    }
+}
+
+enum SSHKeyAuthError: LocalizedError {
+    case keyNotFound
+
+    var errorDescription: String? {
+        switch self {
+        case .keyNotFound:
+            return "SSH key not found in Keychain — try regenerating"
         }
     }
 }

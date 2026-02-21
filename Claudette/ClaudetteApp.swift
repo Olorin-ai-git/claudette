@@ -1,12 +1,15 @@
-import SwiftUI
 import os
+import SwiftUI
 
 @main
 struct ClaudetteApp: App {
     private let config: AppConfiguration
     private let keychainService: KeychainServiceProtocol
+    private let profileStore: ProfileStoreProtocol
+    private let hostKeyStore: HostKeyStoreProtocol
+    private let sshKeyService: SSHKeyServiceProtocol
     @StateObject private var connectionManager: SSHConnectionManager
-    @StateObject private var connectionSettingsViewModel: ConnectionSettingsViewModel
+    @StateObject private var bonjourService: BonjourDiscoveryService
 
     init() {
         let config = AppConfiguration()
@@ -23,17 +26,41 @@ struct ClaudetteApp: App {
         )
         self.keychainService = keychainService
 
+        let profileStore = ProfileStore(
+            logger: LoggerFactory.logger(category: "ProfileStore")
+        )
+        self.profileStore = profileStore
+
+        let hostKeyStore = HostKeyStore(
+            logger: LoggerFactory.logger(category: "HostKeyStore")
+        )
+        self.hostKeyStore = hostKeyStore
+
+        let sshKeyService = SSHKeyService(
+            keychainService: keychainService,
+            logger: LoggerFactory.logger(category: "SSHKeyService")
+        )
+        self.sshKeyService = sshKeyService
+
         let connectionManager = SSHConnectionManager(
             config: config,
+            keychainService: keychainService,
             logger: LoggerFactory.logger(category: "SSHConnection")
         )
         _connectionManager = StateObject(wrappedValue: connectionManager)
 
-        _connectionSettingsViewModel = StateObject(wrappedValue: ConnectionSettingsViewModel(
-            keychainService: keychainService,
-            config: config,
-            logger: LoggerFactory.logger(category: "ConnectionSettings")
+        _bonjourService = StateObject(wrappedValue: BonjourDiscoveryService(
+            serviceType: config.bonjourServiceType,
+            domain: config.bonjourDomain,
+            logger: LoggerFactory.logger(category: "Bonjour")
         ))
+
+        // Migrate legacy connection settings if present
+        Self.migrateLegacySettings(
+            keychainService: keychainService,
+            profileStore: profileStore,
+            logger: logger
+        )
     }
 
     var body: some Scene {
@@ -41,9 +68,54 @@ struct ClaudetteApp: App {
             ContentView(
                 config: config,
                 keychainService: keychainService,
+                profileStore: profileStore,
+                hostKeyStore: hostKeyStore,
+                sshKeyService: sshKeyService,
                 connectionManager: connectionManager,
-                connectionSettingsViewModel: connectionSettingsViewModel
+                bonjourService: bonjourService
             )
+        }
+    }
+
+    private static func migrateLegacySettings(
+        keychainService: KeychainService,
+        profileStore: ProfileStore,
+        logger: Logger
+    ) {
+        guard let legacy = keychainService.retrieveLegacyConnectionSettings() else {
+            return
+        }
+
+        logger.info("Found legacy connection settings, migrating...")
+
+        let legacyAccount = legacy.username + "@" + legacy.host
+        let legacyPassword = keychainService.retrieveLegacyPassword(account: legacyAccount)
+
+        let profile = ServerProfile(
+            name: legacy.host,
+            host: legacy.host,
+            port: legacy.port,
+            username: legacy.username,
+            authMethod: .password,
+            lastProjectPath: legacy.projectFolder
+        )
+
+        do {
+            try profileStore.saveProfile(profile)
+
+            if let password = legacyPassword {
+                try keychainService.storePassword(password, profileId: profile.id)
+            }
+
+            // Clean up legacy data
+            try? keychainService.deleteLegacyConnectionSettings()
+            if legacyPassword != nil {
+                try? keychainService.deleteLegacyPassword(account: legacyAccount)
+            }
+
+            logger.info("Successfully migrated legacy settings to profile: \(profile.name, privacy: .public)")
+        } catch {
+            logger.error("Failed to migrate legacy settings: \(error.localizedDescription)")
         }
     }
 }
