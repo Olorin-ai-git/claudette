@@ -278,16 +278,23 @@ final class SSHConnectionManager: ObservableObject {
         }
     }
 
-    /// Uploads data to a remote file via a side-channel SSH exec, without
-    /// interrupting the active PTY session.
+    /// Uploads data to a remote file via SFTP, without interrupting the
+    /// active PTY session.
     func uploadData(_ data: Data, remotePath: String) async throws {
         guard let client = sshClient else {
             throw PasteError.notConnected
         }
-        let base64 = data.base64EncodedString()
-        let command = "printf '%s' '\(base64)' | base64 -d > '\(remotePath)'"
-        _ = try await client.executeCommand(command)
-        logger.info("Uploaded \(data.count) bytes to \(remotePath, privacy: .public)")
+        try await client.withSFTP { sftp in
+            let file = try await sftp.openFile(
+                filePath: remotePath,
+                flags: [.write, .create, .truncate]
+            )
+            var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+            buffer.writeBytes(data)
+            try await file.write(buffer)
+            try await file.close()
+        }
+        logger.info("Uploaded \(data.count) bytes via SFTP to \(remotePath, privacy: .public)")
     }
 
     func disconnect() {

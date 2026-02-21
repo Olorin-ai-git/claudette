@@ -28,6 +28,9 @@ struct ContentView: View {
     /// Owned here so it survives navigationDestination re-evaluations that would otherwise
     /// release the SessionViewModel mid-connection and nil-out the TOFUHostKeyValidator delegate.
     @State private var activeSessionViewModel: SessionViewModel?
+    /// Set alongside activeSessionViewModel; onChange fires after @State is
+    /// committed, guaranteeing the destination closure sees the viewModel.
+    @State private var pendingDestination: SessionDestination?
 
     init(
         config: AppConfiguration,
@@ -57,9 +60,13 @@ struct ContentView: View {
             ProfileListView(
                 viewModel: profileListViewModel,
                 onSelectProfile: { profile in
-                    pendingProfile = profile
-                    manualPath = profile.lastProjectPath ?? ""
-                    showingPathInput = true
+                    if let savedPath = profile.lastProjectPath, !savedPath.isEmpty {
+                        handleFolderSelected(profile: profile, path: savedPath)
+                    } else {
+                        pendingProfile = profile
+                        manualPath = ""
+                        showingPathInput = true
+                    }
                 },
                 onEditProfile: { profile in
                     editingProfile = profile
@@ -129,6 +136,12 @@ struct ContentView: View {
                 )
             }
         }
+        .onChange(of: pendingDestination) { _, destination in
+            if let destination {
+                pendingDestination = nil
+                navigationPath.append(destination)
+            }
+        }
     }
 
     private func handleFolderSelected(profile: ServerProfile, path: String) {
@@ -153,13 +166,9 @@ struct ContentView: View {
             logger: LoggerFactory.logger(category: "Session")
         )
         // Store in @State so it outlives navigationDestination re-evaluations.
-        // Defer the navigation append one runloop so SwiftUI commits activeSessionViewModel
-        // before the navigationDestination closure evaluates.
+        // Setting both in the same transaction ensures onChange sees both committed.
         activeSessionViewModel = viewModel
-        let destination = SessionDestination(settings: settings, profile: updatedProfile)
-        DispatchQueue.main.async {
-            navigationPath.append(destination)
-        }
+        pendingDestination = SessionDestination(settings: settings, profile: updatedProfile)
     }
 }
 
