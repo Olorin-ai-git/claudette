@@ -3,6 +3,7 @@ import Foundation
 struct KeyboardButtonConfig: Sendable {
     let label: String
     let byteSequence: [UInt8]
+    let action: String?
 }
 
 struct AppConfiguration: Sendable {
@@ -114,13 +115,16 @@ struct AppConfiguration: Sendable {
         keyboardAccessoryButtons = buttonArray.compactMap { element -> KeyboardButtonConfig? in
             guard let dict = element as? [String: Any] else { return nil }
             guard let label = dict["Label"] as? String else { return nil }
-            guard let rawBytes = dict["ByteSequence"] as? [Any] else { return nil }
-            let bytes: [UInt8] = rawBytes.compactMap { v in
-                if let i = v as? Int { return UInt8(i) }
-                if let i = v as? NSNumber { return UInt8(i.intValue) }
-                return nil
+            let action = dict["Action"] as? String
+            var bytes: [UInt8] = []
+            if let rawBytes = dict["ByteSequence"] as? [Any] {
+                bytes = rawBytes.compactMap { v in
+                    if let i = v as? Int { return UInt8(i) }
+                    if let i = v as? NSNumber { return UInt8(i.intValue) }
+                    return nil
+                }
             }
-            return KeyboardButtonConfig(label: label, byteSequence: bytes)
+            return KeyboardButtonConfig(label: label, byteSequence: bytes, action: action)
         }
 
         // Session Persistence

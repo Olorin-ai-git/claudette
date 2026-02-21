@@ -21,6 +21,8 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
     let connectionManager: SSHConnectionManager
     let settings: ConnectionSettings
     let profile: ServerProfile
+    let agentParser: AgentActivityParser
+    let permissionService: PermissionNotificationService
 
     @Published var hostKeyAlert: HostKeyAlertState?
     @Published private(set) var claudeResources: [ClaudeResource] = []
@@ -57,10 +59,30 @@ final class SessionViewModel: ObservableObject, HostKeyVerificationDelegate {
         self.hostKeyValidator = hostKeyValidator
         self.logger = logger
 
+        let parser = AgentActivityParser(
+            logger: LoggerFactory.logger(category: "AgentParser")
+        )
+        agentParser = parser
+
+        let notifications = PermissionNotificationService(
+            logger: LoggerFactory.logger(category: "PermissionNotification")
+        )
+        permissionService = notifications
+
+        connectionManager.outputInterceptor = { [weak parser, weak notifications] bytes in
+            Task { @MainActor in
+                parser?.processOutput(bytes)
+                notifications?.processOutput(bytes)
+            }
+        }
+
         hostKeyValidator.delegate = self
     }
 
     func connect() {
+        Task { await permissionService.requestAuthorization() }
+        agentParser.reset()
+
         let credential: String
         switch settings.authMethod {
         case .password:

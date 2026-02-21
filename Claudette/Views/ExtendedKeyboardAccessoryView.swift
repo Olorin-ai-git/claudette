@@ -3,16 +3,19 @@ import UIKit
 final class ExtendedKeyboardAccessoryView: UIView {
     private let onKeyTapped: (ArraySlice<UInt8>) -> Void
     private let onDismissKeyboard: () -> Void
+    private let onPaste: () -> Void
     private let config: AppConfiguration
 
     init(
         config: AppConfiguration,
         onKeyTapped: @escaping (ArraySlice<UInt8>) -> Void,
-        onDismissKeyboard: @escaping () -> Void
+        onDismissKeyboard: @escaping () -> Void,
+        onPaste: @escaping () -> Void
     ) {
         self.config = config
         self.onKeyTapped = onKeyTapped
         self.onDismissKeyboard = onDismissKeyboard
+        self.onPaste = onPaste
         let height = config.keyboardAccessoryHeight
         super.init(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: height))
         autoresizingMask = .flexibleWidth
@@ -113,8 +116,12 @@ final class ExtendedKeyboardAccessoryView: UIView {
         let index = sender.tag
         guard index < config.keyboardAccessoryButtons.count else { return }
 
-        let bytes = config.keyboardAccessoryButtons[index].byteSequence
-        onKeyTapped(bytes[...])
+        let buttonConfig = config.keyboardAccessoryButtons[index]
+        if buttonConfig.action == "Paste" {
+            onPaste()
+        } else {
+            onKeyTapped(buttonConfig.byteSequence[...])
+        }
 
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()

@@ -16,6 +16,7 @@ final class SSHConnectionManager: ObservableObject {
     private let keychainService: KeychainServiceProtocol
     private let tmuxService: TmuxSessionServiceProtocol
     private let logger: Logger
+    private var sshClient: SSHClient?
     private var stdinWriter: TTYStdinWriter?
     private var connectionTask: Task<Void, Never>?
     private weak var terminalView: ClaudetteTerminalView?
@@ -91,6 +92,7 @@ final class SSHConnectionManager: ObservableObject {
                 fputs("[Claudette] SSH connected OK\n", stderr)
 
                 await MainActor.run { [weak self] in
+                    self?.sshClient = client
                     self?.connectionState = .connected
                 }
                 logger.info("SSH connected, opening PTY")
@@ -167,6 +169,7 @@ final class SSHConnectionManager: ObservableObject {
                 await MainActor.run { [weak self] in
                     self?.connectionState = .disconnected
                     self?.stdinWriter = nil
+                    self?.sshClient = nil
                 }
 
             } catch is CancellationError {
@@ -175,6 +178,7 @@ final class SSHConnectionManager: ObservableObject {
                 await MainActor.run { [weak self] in
                     self?.connectionState = .disconnected
                     self?.stdinWriter = nil
+                    self?.sshClient = nil
                 }
             } catch {
                 let message = Self.humanReadableError(error)
@@ -183,6 +187,7 @@ final class SSHConnectionManager: ObservableObject {
                 await MainActor.run { [weak self] in
                     self?.connectionState = .failed(errorDescription: message)
                     self?.stdinWriter = nil
+                    self?.sshClient = nil
                 }
             }
         }
@@ -273,11 +278,24 @@ final class SSHConnectionManager: ObservableObject {
         }
     }
 
+    /// Uploads data to a remote file via a side-channel SSH exec, without
+    /// interrupting the active PTY session.
+    func uploadData(_ data: Data, remotePath: String) async throws {
+        guard let client = sshClient else {
+            throw PasteError.notConnected
+        }
+        let base64 = data.base64EncodedString()
+        let command = "printf '%s' '\(base64)' | base64 -d > '\(remotePath)'"
+        _ = try await client.executeCommand(command)
+        logger.info("Uploaded \(data.count) bytes to \(remotePath, privacy: .public)")
+    }
+
     func disconnect() {
         logger.info("Disconnecting SSH session")
         connectionTask?.cancel()
         connectionTask = nil
         stdinWriter = nil
+        sshClient = nil
         connectionState = .disconnected
     }
 
@@ -339,6 +357,20 @@ enum SSHKeyAuthError: LocalizedError {
         switch self {
         case .keyNotFound:
             return "SSH key not found in Keychain — try regenerating"
+        }
+    }
+}
+
+enum PasteError: LocalizedError {
+    case notConnected
+    case imageTooLarge
+
+    var errorDescription: String? {
+        switch self {
+        case .notConnected:
+            return "Cannot paste — not connected to remote"
+        case .imageTooLarge:
+            return "Image too large to paste"
         }
     }
 }

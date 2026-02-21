@@ -83,6 +83,41 @@
 			</dict>
 			<dict>
 				<key>Label</key>
+				<string>/resume</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>47</integer>
+					<integer>114</integer>
+					<integer>101</integer>
+					<integer>115</integer>
+					<integer>117</integer>
+					<integer>109</integer>
+					<integer>101</integer>
+					<integer>13</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>/clear</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>47</integer>
+					<integer>99</integer>
+					<integer>108</integer>
+					<integer>101</integer>
+					<integer>97</integer>
+					<integer>114</integer>
+					<integer>13</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>Paste Img</string>
+				<key>Action</key>
+				<string>Paste</string>
+			</dict>
+			<dict>
+				<key>Label</key>
 				<string>Tab</string>
 				<key>ByteSequence</key>
 				<array>
@@ -169,35 +204,6 @@
 				<key>ByteSequence</key>
 				<array>
 					<integer>45</integer>
-				</array>
-			</dict>
-			<dict>
-				<key>Label</key>
-				<string>/resume</string>
-				<key>ByteSequence</key>
-				<array>
-					<integer>47</integer>
-					<integer>114</integer>
-					<integer>101</integer>
-					<integer>115</integer>
-					<integer>117</integer>
-					<integer>109</integer>
-					<integer>101</integer>
-					<integer>13</integer>
-				</array>
-			</dict>
-			<dict>
-				<key>Label</key>
-				<string>/clear</string>
-				<key>ByteSequence</key>
-				<array>
-					<integer>47</integer>
-					<integer>99</integer>
-					<integer>108</integer>
-					<integer>101</integer>
-					<integer>97</integer>
-					<integer>114</integer>
-					<integer>13</integer>
 				</array>
 			</dict>
 			<dict>

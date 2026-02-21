@@ -1,9 +1,33 @@
+import Combine
 import SwiftUI
+import UIKit
+
+/// Observes UIKit keyboard notifications and publishes the keyboard height
+/// (including the input accessory view) so SwiftUI can size around it.
+private final class KeyboardObserver: ObservableObject {
+    @Published var height: CGFloat = 0
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+            .merge(with: NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification))
+            .compactMap { $0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect }
+            .map(\.height)
+            .receive(on: RunLoop.main)
+            .assign(to: &$height)
+
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+            .map { _ in CGFloat(0) }
+            .receive(on: RunLoop.main)
+            .assign(to: &$height)
+    }
+}
 
 private enum SessionSheet: Identifiable {
     case snippets
     case resources
     case claudeMD
+    case agents
     case hostKeyAlert(HostKeyAlertState)
 
     var id: String {
@@ -11,6 +35,7 @@ private enum SessionSheet: Identifiable {
         case .snippets: return "snippets"
         case .resources: return "resources"
         case .claudeMD: return "claudeMD"
+        case .agents: return "agents"
         case let .hostKeyAlert(s): return "hostKey-\(s.id)"
         }
     }
@@ -22,6 +47,7 @@ struct SessionView: View {
     let config: AppConfiguration
     @StateObject private var speechService: SpeechRecognitionService
     @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var keyboardObserver = KeyboardObserver()
     @State private var activeSheet: SessionSheet?
 
     init(viewModel: SessionViewModel, config: AppConfiguration) {
@@ -44,20 +70,28 @@ struct SessionView: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let keyboardUp = keyboardObserver.height > 0
+            let bottomInset = keyboardUp ? keyboardObserver.height : geometry.safeAreaInsets.bottom
+
             ZStack {
                 VStack(spacing: 0) {
                     TerminalContainerView(
                         connectionManager: viewModel.connectionManager,
                         config: config
                     )
+                    .frame(maxHeight: .infinity)
 
-                    statusBar
-                        .padding(.bottom, geometry.safeAreaInsets.bottom)
-                        .background(.ultraThinMaterial)
+                    if !keyboardUp {
+                        statusBar
+                            .padding(.bottom, geometry.safeAreaInsets.bottom)
+                            .background(.ultraThinMaterial)
+                    }
                 }
+                .padding(.bottom, keyboardUp ? bottomInset : 0)
                 .ignoresSafeArea(.container, edges: .bottom)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
 
-                if isConnected {
+                if isConnected && !keyboardUp {
                     VStack {
                         Spacer()
                         HStack(spacing: 12) {
@@ -70,6 +104,7 @@ struct SessionView: View {
                 }
             }
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -90,6 +125,22 @@ struct SessionView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { activeSheet = .resources } label: {
                     Image(systemName: "terminal")
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { activeSheet = .agents } label: {
+                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                        .overlay(alignment: .topTrailing) {
+                            if viewModel.agentParser.activeAgentCount > 0 {
+                                Text("\(viewModel.agentParser.activeAgentCount)")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .padding(3)
+                                    .background(Color.green)
+                                    .clipShape(Circle())
+                                    .offset(x: 6, y: -6)
+                            }
+                        }
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -167,6 +218,8 @@ struct SessionView: View {
                         viewModel.sendSnippet("/compact")
                     }
                 )
+            case .agents:
+                AgentVisualizerView(parser: viewModel.agentParser)
             }
         }
     }
@@ -208,50 +261,32 @@ struct SessionView: View {
     }
 
     private var statusBar: some View {
-        VStack(spacing: 0) {
-            // DEBUG: full error on a second line when failed
-            if case let .failed(msg) = connectionManager.connectionState {
-                Text("ERR: \(msg)")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.red.opacity(0.85))
-                    .lineLimit(4)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+        HStack(spacing: 6) {
+            Circle()
+                .fill(statusColor)
+                .frame(width: 6, height: 6)
 
-            HStack {
-                Circle()
-                    .fill(statusColor)
-                    .frame(width: 8, height: 8)
+            Text(statusText)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
 
-                Text(statusText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+            Spacer()
 
-                Spacer()
-
-                if isConnected {
-                    Button("Disconnect") {
-                        viewModel.disconnect()
-                    }
-                    .font(.caption)
+            if isConnected {
+                Button("Disconnect") { viewModel.disconnect() }
+                    .font(.caption2)
                     .foregroundStyle(.red)
-                }
-
-                if case .failed = connectionManager.connectionState {
-                    Button("Retry") {
-                        viewModel.connect()
-                    }
-                    .font(.caption)
-                }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 6)
-        } // end outer VStack
+
+            if case .failed = connectionManager.connectionState {
+                Button("Retry") { viewModel.connect() }
+                    .font(.caption2)
+            }
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 24)
     }
 
     private var isConnected: Bool {

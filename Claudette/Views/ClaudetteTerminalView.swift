@@ -9,13 +9,18 @@ final class ClaudetteTerminalView: TerminalView {
     private var outputLines: [String] = []
     private var lineBuffer: String = ""
 
-    func configureAccessoryView(config: AppConfiguration, onKeyTapped: @escaping (ArraySlice<UInt8>) -> Void) {
+    func configureAccessoryView(
+        config: AppConfiguration,
+        onKeyTapped: @escaping (ArraySlice<UInt8>) -> Void,
+        onPaste: @escaping () -> Void
+    ) {
         let view = ExtendedKeyboardAccessoryView(
             config: config,
             onKeyTapped: onKeyTapped,
             onDismissKeyboard: { [weak self] in
                 self?.resignFirstResponder()
-            }
+            },
+            onPaste: onPaste
         )
         accessoryView = view
         inputAccessoryView = view

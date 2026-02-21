@@ -17,9 +17,11 @@ struct TerminalContainerView: UIViewRepresentable {
         terminalView.caretColor = UIColor(hex: config.terminalCaretColor)
         terminalView.optionAsMetaKey = true
 
-        terminalView.configureAccessoryView(config: config) { bytes in
+        terminalView.configureAccessoryView(config: config, onKeyTapped: { bytes in
             connectionManager.sendToRemote(bytes)
-        }
+        }, onPaste: {
+            Self.handlePaste(connectionManager: connectionManager)
+        })
         terminalView.configureBlockSelect()
 
         connectionManager.setTerminalView(terminalView)
@@ -28,6 +30,39 @@ struct TerminalContainerView: UIViewRepresentable {
     }
 
     func updateUIView(_: ClaudetteTerminalView, context _: Context) {}
+
+    /// Reads UIPasteboard and sends content to the remote SSH session.
+    /// Images are uploaded via a side-channel exec and the path is typed.
+    /// Text is sent directly as bytes (standard terminal paste).
+    private static func handlePaste(connectionManager: SSHConnectionManager) {
+        let pasteboard = UIPasteboard.general
+
+        // Prefer image when available (matches Claude Code Ctrl+V behavior)
+        if let image = pasteboard.image,
+           let jpegData = image.jpegData(compressionQuality: 0.85)
+        {
+            let filename = "claudette_paste_\(UUID().uuidString.prefix(8)).jpg"
+            let remotePath = "/tmp/\(filename)"
+            Task {
+                do {
+                    try await connectionManager.uploadData(jpegData, remotePath: remotePath)
+                    let pathBytes = Array(remotePath.utf8)
+                    await MainActor.run {
+                        connectionManager.sendToRemote(pathBytes[...])
+                    }
+                } catch {
+                    fputs("[Claudette] Image paste failed: \(error)\n", stderr)
+                }
+            }
+            return
+        }
+
+        // Fall back to text paste
+        if let text = pasteboard.string, !text.isEmpty {
+            let bytes = Array(text.utf8)
+            connectionManager.sendToRemote(bytes[...])
+        }
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
