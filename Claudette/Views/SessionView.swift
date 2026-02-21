@@ -70,7 +70,6 @@ struct SessionView: View {
                 }
             }
         }
-        .ignoresSafeArea(.keyboard)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {

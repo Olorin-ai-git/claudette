@@ -171,6 +171,75 @@
 					<integer>45</integer>
 				</array>
 			</dict>
+			<dict>
+				<key>Label</key>
+				<string>/resume</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>47</integer>
+					<integer>114</integer>
+					<integer>101</integer>
+					<integer>115</integer>
+					<integer>117</integer>
+					<integer>109</integer>
+					<integer>101</integer>
+					<integer>13</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>/clear</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>47</integer>
+					<integer>99</integer>
+					<integer>108</integer>
+					<integer>101</integer>
+					<integer>97</integer>
+					<integer>114</integer>
+					<integer>13</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>&#x2190;</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>27</integer>
+					<integer>91</integer>
+					<integer>68</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>&#x2193;</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>27</integer>
+					<integer>91</integer>
+					<integer>66</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>&#x2191;</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>27</integer>
+					<integer>91</integer>
+					<integer>65</integer>
+				</array>
+			</dict>
+			<dict>
+				<key>Label</key>
+				<string>&#x2192;</string>
+				<key>ByteSequence</key>
+				<array>
+					<integer>27</integer>
+					<integer>91</integer>
+					<integer>67</integer>
+				</array>
+			</dict>
 		</array>
 	</dict>
 	<key>SessionPersistence</key>
