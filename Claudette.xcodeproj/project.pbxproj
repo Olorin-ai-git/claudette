@@ -45,6 +45,7 @@
 		D10000010000000000000011 /* SSHKeyManagementSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000011 /* SSHKeyManagementSection.swift */; };
 		D10000010000000000000012 /* RemoteFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000012 /* RemoteFileBrowserView.swift */; };
 		D10000010000000000000013 /* HostKeyAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000020000000000000013 /* HostKeyAlertView.swift */; };
+		E10000010000000000000001 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000001 /* SplashView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -85,6 +86,7 @@
 		D10000020000000000000011 /* SSHKeyManagementSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyManagementSection.swift; sourceTree = "<group>"; };
 		D10000020000000000000012 /* RemoteFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFileBrowserView.swift; sourceTree = "<group>"; };
 		D10000020000000000000013 /* HostKeyAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyAlertView.swift; sourceTree = "<group>"; };
+		E10000020000000000000001 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -211,6 +213,7 @@
 				C1000002000000000000000E /* SessionView.swift */,
 				D10000020000000000000011 /* SSHKeyManagementSection.swift */,
 				C1000002000000000000000D /* TerminalContainerView.swift */,
+				E10000020000000000000001 /* SplashView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -327,6 +330,7 @@
 				D10000010000000000000011 /* SSHKeyManagementSection.swift in Sources */,
 				D10000010000000000000012 /* RemoteFileBrowserView.swift in Sources */,
 				D10000010000000000000013 /* HostKeyAlertView.swift in Sources */,
+				E10000010000000000000001 /* SplashView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -457,21 +461,26 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Claudette/Preview Content\"";
+				DEVELOPMENT_TEAM = 963B7732N5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_CFBundleDisplayName = Claudette;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSBonjourServices = _ssh._tcp.;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Claudette discovers Macs on your local network running SSH.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudette uses the microphone for voice dictation to send commands to the terminal.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Claudette uses speech recognition to convert your voice into terminal commands.";
-				INFOPLIST_KEY_NSBonjourServices = "_ssh._tcp.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -490,21 +499,26 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Claudette/Preview Content\"";
+				DEVELOPMENT_TEAM = 963B7732N5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_CFBundleDisplayName = Claudette;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSBonjourServices = _ssh._tcp.;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Claudette discovers Macs on your local network running SSH.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Claudette uses the microphone for voice dictation to send commands to the terminal.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Claudette uses speech recognition to convert your voice into terminal commands.";
-				INFOPLIST_KEY_NSBonjourServices = "_ssh._tcp.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -572,7 +586,6 @@
 			productName = SwiftTerm;
 		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = A10000080000000000000001 /* Project object */;
 }

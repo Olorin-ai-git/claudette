@@ -17,6 +17,15 @@ struct AppConfiguration: Sendable {
     let terminalDefaultColumns: Int
     let terminalDefaultRows: Int
 
+    let splashAccentColor: String
+    let splashAccentColorLight: String
+    let splashAccentColorDark: String
+    let splashBackgroundColor: String
+    let splashAppName: String
+    let splashCursorSymbol: String
+    let splashSlogan: String
+    let splashFooterText: String
+
     let keychainServiceName: String
     let loggerSubsystem: String
 
@@ -49,6 +58,16 @@ struct AppConfiguration: Sendable {
         terminalTermType = Self.required(terminal, key: "TermType")
         terminalDefaultColumns = Self.required(terminal, key: "DefaultColumns")
         terminalDefaultRows = Self.required(terminal, key: "DefaultRows")
+
+        let splash = Self.requiredDict(root, key: "Splash")
+        splashAccentColor = Self.required(splash, key: "AccentColor")
+        splashAccentColorLight = Self.required(splash, key: "AccentColorLight")
+        splashAccentColorDark = Self.required(splash, key: "AccentColorDark")
+        splashBackgroundColor = Self.required(splash, key: "BackgroundColor")
+        splashAppName = Self.required(splash, key: "AppName")
+        splashCursorSymbol = Self.required(splash, key: "CursorSymbol")
+        splashSlogan = Self.required(splash, key: "Slogan")
+        splashFooterText = Self.required(splash, key: "FooterText")
 
         keychainServiceName = Self.required(keychain, key: "ServiceName")
         loggerSubsystem = Self.required(loggerConfig, key: "Subsystem")

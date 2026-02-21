@@ -10,6 +10,7 @@ struct ClaudetteApp: App {
     private let sshKeyService: SSHKeyServiceProtocol
     @StateObject private var connectionManager: SSHConnectionManager
     @StateObject private var bonjourService: BonjourDiscoveryService
+    @State private var showingSplash = true
 
     init() {
         let config = AppConfiguration()
@@ -65,15 +66,26 @@ struct ClaudetteApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(
-                config: config,
-                keychainService: keychainService,
-                profileStore: profileStore,
-                hostKeyStore: hostKeyStore,
-                sshKeyService: sshKeyService,
-                connectionManager: connectionManager,
-                bonjourService: bonjourService
-            )
+            ZStack {
+                ContentView(
+                    config: config,
+                    keychainService: keychainService,
+                    profileStore: profileStore,
+                    hostKeyStore: hostKeyStore,
+                    sshKeyService: sshKeyService,
+                    connectionManager: connectionManager,
+                    bonjourService: bonjourService
+                )
+
+                if showingSplash {
+                    SplashView(config: config) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            showingSplash = false
+                        }
+                    }
+                    .transition(.opacity)
+                }
+            }
         }
     }
 

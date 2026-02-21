@@ -42,6 +42,25 @@
 		<key>ServiceName</key>
 		<string>com.olorin.claudette.ssh</string>
 	</dict>
+	<key>Splash</key>
+	<dict>
+		<key>AccentColor</key>
+		<string>#A855F7</string>
+		<key>AccentColorLight</key>
+		<string>#C084FC</string>
+		<key>AccentColorDark</key>
+		<string>#7E22CE</string>
+		<key>BackgroundColor</key>
+		<string>#0D0D1A</string>
+		<key>AppName</key>
+		<string>Claudette</string>
+		<key>CursorSymbol</key>
+		<string>&gt;</string>
+		<key>Slogan</key>
+		<string>Your Code. Anywhere.</string>
+		<key>FooterText</key>
+		<string>Powered by Olorin.ai</string>
+	</dict>
 	<key>Logger</key>
 	<dict>
 		<key>Subsystem</key>
