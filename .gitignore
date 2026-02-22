@@ -14,5 +14,9 @@ Packages/
 *.swp
 *~
 
+# Node.js (CLI)
+node_modules/
+dist/
+
 # Temporary
 /tmp/
