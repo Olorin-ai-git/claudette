@@ -49,6 +49,7 @@ struct SessionView: View {
     @StateObject private var keyboardObserver = KeyboardObserver()
     @State private var activeSheet: SessionSheet?
     @State private var showCopyToast = false
+    @State private var copyToastMessage = ""
 
     init(viewModel: SessionViewModel, config: AppConfiguration) {
         self.viewModel = viewModel
@@ -124,7 +125,7 @@ struct SessionView: View {
                 // Copy toast
                 if showCopyToast {
                     VStack {
-                        Text("Session copied to clipboard")
+                        Text(copyToastMessage)
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundStyle(.white)
@@ -423,16 +424,18 @@ struct SessionView: View {
 
             if isConnected {
                 Button {
-                    if viewModel.copySessionToClipboard() {
-                        withAnimation { showCopyToast = true }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            withAnimation { showCopyToast = false }
-                        }
+                    let copied = viewModel.copySessionToClipboard()
+                    withAnimation { showCopyToast = true }
+                    copyToastMessage = copied ? "Session copied" : "No content to copy"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation { showCopyToast = false }
                     }
                 } label: {
                     Image(systemName: "doc.on.clipboard")
+                        .frame(width: 28, height: 24)
+                        .contentShape(Rectangle())
                 }
-                .font(.caption2)
+                .font(.caption)
 
                 Button("Disconnect") { viewModel.disconnect() }
                     .font(.caption2)

@@ -57,8 +57,15 @@ final class ClaudetteTerminalView: TerminalView {
     }
 
     /// Returns the full terminal output buffer as a single string.
+    /// Uses the raw output log if available, otherwise reads SwiftTerm's buffer.
     func getSessionContent() -> String {
-        outputLines.joined(separator: "\n")
+        if !outputLines.isEmpty {
+            return outputLines.joined(separator: "\n")
+        }
+
+        // Fallback: read content directly from SwiftTerm's terminal buffer
+        let data = getTerminal().getBufferAsData()
+        return String(data: data, encoding: .utf8) ?? ""
     }
 
     // MARK: - Block Select
