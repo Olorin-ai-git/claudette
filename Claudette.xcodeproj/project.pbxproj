@@ -77,6 +77,12 @@
 		F1000001000000000000001D /* DefaultSnippets.json in Resources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001D /* DefaultSnippets.json */; };
 		G10000010000000000000001 /* TerminalTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = G10000020000000000000001 /* TerminalTab.swift */; };
 		G10000010000000000000002 /* AuthURLInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = G10000020000000000000002 /* AuthURLInterceptor.swift */; };
+		T10000010000000000000001 /* TerminalBlockDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000001 /* TerminalBlockDetectorTests.swift */; };
+		T10000010000000000000002 /* TmuxSessionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000002 /* TmuxSessionServiceTests.swift */; };
+		T10000010000000000000003 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000003 /* ModelTests.swift */; };
+		T10000010000000000000004 /* AgentActivityParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000004 /* AgentActivityParserTests.swift */; };
+		T10000010000000000000005 /* WakeOnLANServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000005 /* WakeOnLANServiceTests.swift */; };
+		T10000010000000000000006 /* UIColorHexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000006 /* UIColorHexTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -149,9 +155,33 @@
 		F1000002000000000000001D /* DefaultSnippets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DefaultSnippets.json; sourceTree = "<group>"; };
 		G10000020000000000000001 /* TerminalTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTab.swift; sourceTree = "<group>"; };
 		G10000020000000000000002 /* AuthURLInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthURLInterceptor.swift; sourceTree = "<group>"; };
+		T10000020000000000000001 /* TerminalBlockDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalBlockDetectorTests.swift; sourceTree = "<group>"; };
+		T10000020000000000000002 /* TmuxSessionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxSessionServiceTests.swift; sourceTree = "<group>"; };
+		T10000020000000000000003 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
+		T10000020000000000000004 /* AgentActivityParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentActivityParserTests.swift; sourceTree = "<group>"; };
+		T10000020000000000000005 /* WakeOnLANServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeOnLANServiceTests.swift; sourceTree = "<group>"; };
+		T10000020000000000000006 /* UIColorHexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColorHexTests.swift; sourceTree = "<group>"; };
+		T10000020000000000000010 /* ClaudetteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudetteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXContainerItemProxy section */
+		T10000040000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000080000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000050000000000000001;
+			remoteInfo = Claudette;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		T10000060000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A10000030000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -168,6 +198,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000040000000000000002 /* Claudette */,
+				T10000030000000000000001 /* ClaudetteTests */,
 				A10000040000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -203,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000020000000000000010 /* Claudette.app */,
+				T10000020000000000000010 /* ClaudetteTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -311,6 +343,19 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		T10000030000000000000001 /* ClaudetteTests */ = {
+			isa = PBXGroup;
+			children = (
+				T10000020000000000000004 /* AgentActivityParserTests.swift */,
+				T10000020000000000000003 /* ModelTests.swift */,
+				T10000020000000000000001 /* TerminalBlockDetectorTests.swift */,
+				T10000020000000000000002 /* TmuxSessionServiceTests.swift */,
+				T10000020000000000000006 /* UIColorHexTests.swift */,
+				T10000020000000000000005 /* WakeOnLANServiceTests.swift */,
+			);
+			path = ClaudetteTests;
+			sourceTree = "<group>";
+		};
 		F10000030000000000000001 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -343,6 +388,24 @@
 			productReference = A10000020000000000000010 /* Claudette.app */;
 			productType = "com.apple.product-type.application";
 		};
+		T10000050000000000000001 /* ClaudetteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = T10000070000000000000001 /* Build configuration list for PBXNativeTarget "ClaudetteTests" */;
+			buildPhases = (
+				T10000060000000000000001 /* Sources */,
+				T10000060000000000000002 /* Frameworks */,
+				T10000060000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				T10000050000000000000002 /* PBXTargetDependency */,
+			);
+			name = ClaudetteTests;
+			productName = ClaudetteTests;
+			productReference = T10000020000000000000010 /* ClaudetteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -355,6 +418,10 @@
 				TargetAttributes = {
 					A10000050000000000000001 = {
 						CreatedOnToolsVersion = 15.4;
+					};
+					T10000050000000000000001 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = A10000050000000000000001;
 					};
 				};
 			};
@@ -376,6 +443,7 @@
 			projectRoot = "";
 			targets = (
 				A10000050000000000000001 /* Claudette */,
+				T10000050000000000000001 /* ClaudetteTests */,
 			);
 		};
 /* End PBXProject section */
@@ -389,6 +457,13 @@
 				A10000010000000000000003 /* Assets.xcassets in Resources */,
 				C10000010000000000000001 /* Configuration.plist in Resources */,
 				F1000001000000000000001D /* DefaultSnippets.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		T10000060000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -466,7 +541,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		T10000060000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				T10000010000000000000001 /* TerminalBlockDetectorTests.swift in Sources */,
+				T10000010000000000000002 /* TmuxSessionServiceTests.swift in Sources */,
+				T10000010000000000000003 /* ModelTests.swift in Sources */,
+				T10000010000000000000004 /* AgentActivityParserTests.swift in Sources */,
+				T10000010000000000000005 /* WakeOnLANServiceTests.swift in Sources */,
+				T10000010000000000000006 /* UIColorHexTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		T10000050000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000050000000000000001 /* Claudette */;
+			targetProxy = T10000040000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A10000090000000000000001 /* Debug */ = {
@@ -664,6 +760,44 @@
 			};
 			name = Release;
 		};
+		T10000090000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 963B7732N5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.olorin.claudette.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Claudette.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Claudette";
+			};
+			name = Debug;
+		};
+		T10000090000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 963B7732N5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.olorin.claudette.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Claudette.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Claudette";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -681,6 +815,15 @@
 			buildConfigurations = (
 				A10000090000000000000003 /* Debug */,
 				A10000090000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		T10000070000000000000001 /* Build configuration list for PBXNativeTarget "ClaudetteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				T10000090000000000000001 /* Debug */,
+				T10000090000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
