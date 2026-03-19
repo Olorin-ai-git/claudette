@@ -16,6 +16,7 @@ struct ContentView: View {
     let sshKeyService: SSHKeyServiceProtocol
     @ObservedObject var connectionManager: SSHConnectionManager
     @ObservedObject var bonjourService: BonjourDiscoveryService
+    @ObservedObject var appIconManager: AppIconManager
 
     @StateObject private var profileListViewModel: ProfileListViewModel
     @State private var navigationPath = NavigationPath()
@@ -39,7 +40,8 @@ struct ContentView: View {
         hostKeyStore: HostKeyStoreProtocol,
         sshKeyService: SSHKeyServiceProtocol,
         connectionManager: SSHConnectionManager,
-        bonjourService: BonjourDiscoveryService
+        bonjourService: BonjourDiscoveryService,
+        appIconManager: AppIconManager
     ) {
         self.config = config
         self.keychainService = keychainService
@@ -48,6 +50,7 @@ struct ContentView: View {
         self.sshKeyService = sshKeyService
         self.connectionManager = connectionManager
         self.bonjourService = bonjourService
+        self.appIconManager = appIconManager
 
         _profileListViewModel = StateObject(wrappedValue: ProfileListViewModel(
             profileStore: profileStore,
@@ -59,6 +62,7 @@ struct ContentView: View {
         NavigationStack(path: $navigationPath) {
             ProfileListView(
                 viewModel: profileListViewModel,
+                appIconManager: appIconManager,
                 onSelectProfile: { profile in
                     if let savedPath = profile.lastProjectPath, !savedPath.isEmpty {
                         handleFolderSelected(profile: profile, path: savedPath)

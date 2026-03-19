@@ -77,6 +77,16 @@
 		F1000001000000000000001D /* DefaultSnippets.json in Resources */ = {isa = PBXBuildFile; fileRef = F1000002000000000000001D /* DefaultSnippets.json */; };
 		G10000010000000000000001 /* TerminalTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = G10000020000000000000001 /* TerminalTab.swift */; };
 		G10000010000000000000002 /* AuthURLInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = G10000020000000000000002 /* AuthURLInterceptor.swift */; };
+		H10000010000000000000001 /* UserTier.swift in Sources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000001 /* UserTier.swift */; };
+		H10000010000000000000002 /* AppIconManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000002 /* AppIconManager.swift */; };
+		H1000001000000000000000A /* AppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1000002000000000000000A /* AppSettingsView.swift */; };
+		H10000010000000000000003 /* AppIcon-Echo-120x120.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000003 /* AppIcon-Echo-120x120.png */; };
+		H10000010000000000000004 /* AppIcon-Echo-180x180.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000004 /* AppIcon-Echo-180x180.png */; };
+		H10000010000000000000005 /* AppIcon-Echo-80x80.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000005 /* AppIcon-Echo-80x80.png */; };
+		H10000010000000000000006 /* AppIcon-Echo-87x87.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000006 /* AppIcon-Echo-87x87.png */; };
+		H10000010000000000000007 /* AppIcon-Echo-60x60.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000007 /* AppIcon-Echo-60x60.png */; };
+		H10000010000000000000008 /* AppIcon-Echo-58x58.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000008 /* AppIcon-Echo-58x58.png */; };
+		H10000010000000000000009 /* AppIcon-Echo-40x40.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000009 /* AppIcon-Echo-40x40.png */; };
 		T10000010000000000000001 /* TerminalBlockDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000001 /* TerminalBlockDetectorTests.swift */; };
 		T10000010000000000000002 /* TmuxSessionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000002 /* TmuxSessionServiceTests.swift */; };
 		T10000010000000000000003 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000003 /* ModelTests.swift */; };
@@ -155,6 +165,17 @@
 		F1000002000000000000001D /* DefaultSnippets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DefaultSnippets.json; sourceTree = "<group>"; };
 		G10000020000000000000001 /* TerminalTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTab.swift; sourceTree = "<group>"; };
 		G10000020000000000000002 /* AuthURLInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthURLInterceptor.swift; sourceTree = "<group>"; };
+		H10000020000000000000001 /* UserTier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTier.swift; sourceTree = "<group>"; };
+		H10000020000000000000010 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		H10000020000000000000002 /* AppIconManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconManager.swift; sourceTree = "<group>"; };
+		H10000020000000000000003 /* AppIcon-Echo-120x120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-120x120.png"; sourceTree = "<group>"; };
+		H10000020000000000000004 /* AppIcon-Echo-180x180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-180x180.png"; sourceTree = "<group>"; };
+		H10000020000000000000005 /* AppIcon-Echo-80x80.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-80x80.png"; sourceTree = "<group>"; };
+		H10000020000000000000006 /* AppIcon-Echo-87x87.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-87x87.png"; sourceTree = "<group>"; };
+		H10000020000000000000007 /* AppIcon-Echo-60x60.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-60x60.png"; sourceTree = "<group>"; };
+		H10000020000000000000008 /* AppIcon-Echo-58x58.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-58x58.png"; sourceTree = "<group>"; };
+		H10000020000000000000009 /* AppIcon-Echo-40x40.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Echo-40x40.png"; sourceTree = "<group>"; };
+		H1000002000000000000000A /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
 		T10000020000000000000001 /* TerminalBlockDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalBlockDetectorTests.swift; sourceTree = "<group>"; };
 		T10000020000000000000002 /* TmuxSessionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxSessionServiceTests.swift; sourceTree = "<group>"; };
 		T10000020000000000000003 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
@@ -208,6 +229,7 @@
 			children = (
 				A10000020000000000000001 /* ClaudetteApp.swift */,
 				A10000020000000000000002 /* ContentView.swift */,
+				H10000020000000000000010 /* Info.plist */,
 				C10000020000000000000001 /* Configuration.plist */,
 				C10000030000000000000001 /* Config */,
 				C10000030000000000000002 /* Extensions */,
@@ -217,6 +239,7 @@
 				C10000030000000000000006 /* Views */,
 				F10000030000000000000001 /* Resources */,
 				A10000020000000000000003 /* Assets.xcassets */,
+				H10000030000000000000010 /* AlternateIcons */,
 				A10000040000000000000003 /* Preview Content */,
 			);
 			path = Claudette;
@@ -274,6 +297,7 @@
 				D10000020000000000000001 /* ServerProfile.swift */,
 				F10000020000000000000006 /* SnippetCategory.swift */,
 				G10000020000000000000001 /* TerminalTab.swift */,
+				H10000020000000000000001 /* UserTier.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -300,6 +324,7 @@
 				F1000002000000000000000E /* TmuxSessionService.swift */,
 				D10000020000000000000009 /* TOFUHostKeyValidator.swift */,
 				F1000002000000000000000F /* WakeOnLANService.swift */,
+				H10000020000000000000002 /* AppIconManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -320,6 +345,7 @@
 		C10000030000000000000006 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				H1000002000000000000000A /* AppSettingsView.swift */,
 				F10000020000000000000012 /* AgentVisualizerView.swift */,
 				F10000020000000000000013 /* ClaudeMDDashboardView.swift */,
 				F10000020000000000000014 /* ClaudeResourcesSidebarView.swift */,
@@ -354,6 +380,20 @@
 				T10000020000000000000005 /* WakeOnLANServiceTests.swift */,
 			);
 			path = ClaudetteTests;
+			sourceTree = "<group>";
+		};
+		H10000030000000000000010 /* AlternateIcons */ = {
+			isa = PBXGroup;
+			children = (
+				H10000020000000000000003 /* AppIcon-Echo-120x120.png */,
+				H10000020000000000000004 /* AppIcon-Echo-180x180.png */,
+				H10000020000000000000005 /* AppIcon-Echo-80x80.png */,
+				H10000020000000000000006 /* AppIcon-Echo-87x87.png */,
+				H10000020000000000000007 /* AppIcon-Echo-60x60.png */,
+				H10000020000000000000008 /* AppIcon-Echo-58x58.png */,
+				H10000020000000000000009 /* AppIcon-Echo-40x40.png */,
+			);
+			path = AlternateIcons;
 			sourceTree = "<group>";
 		};
 		F10000030000000000000001 /* Resources */ = {
@@ -457,6 +497,13 @@
 				A10000010000000000000003 /* Assets.xcassets in Resources */,
 				C10000010000000000000001 /* Configuration.plist in Resources */,
 				F1000001000000000000001D /* DefaultSnippets.json in Resources */,
+				H10000010000000000000003 /* AppIcon-Echo-120x120.png in Resources */,
+				H10000010000000000000004 /* AppIcon-Echo-180x180.png in Resources */,
+				H10000010000000000000005 /* AppIcon-Echo-80x80.png in Resources */,
+				H10000010000000000000006 /* AppIcon-Echo-87x87.png in Resources */,
+				H10000010000000000000007 /* AppIcon-Echo-60x60.png in Resources */,
+				H10000010000000000000008 /* AppIcon-Echo-58x58.png in Resources */,
+				H10000010000000000000009 /* AppIcon-Echo-40x40.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -538,6 +585,9 @@
 				F1000001000000000000001C /* SnippetEditorView.swift in Sources */,
 				G10000010000000000000001 /* TerminalTab.swift in Sources */,
 				G10000010000000000000002 /* AuthURLInterceptor.swift in Sources */,
+				H10000010000000000000001 /* UserTier.swift in Sources */,
+				H10000010000000000000002 /* AppIconManager.swift in Sources */,
+				H1000001000000000000000A /* AppSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -696,6 +746,7 @@
 				DEVELOPMENT_TEAM = 963B7732N5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Claudette/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Claudette;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -734,6 +785,7 @@
 				DEVELOPMENT_TEAM = 963B7732N5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Claudette/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Claudette;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";

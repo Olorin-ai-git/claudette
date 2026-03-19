@@ -10,6 +10,7 @@ struct ClaudetteApp: App {
     private let sshKeyService: SSHKeyServiceProtocol
     @StateObject private var connectionManager: SSHConnectionManager
     @StateObject private var bonjourService: BonjourDiscoveryService
+    @StateObject private var appIconManager = AppIconManager()
     @State private var showingSplash = true
 
     init() {
@@ -74,7 +75,8 @@ struct ClaudetteApp: App {
                     hostKeyStore: hostKeyStore,
                     sshKeyService: sshKeyService,
                     connectionManager: connectionManager,
-                    bonjourService: bonjourService
+                    bonjourService: bonjourService,
+                    appIconManager: appIconManager
                 )
 
                 if showingSplash {
