@@ -1,0 +1,99 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Archive & Upload
+    runs-on: macos-15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Install App Store Connect API key
+        env:
+          API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          mkdir -p ~/private_keys
+          echo "$API_KEY_P8" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
+
+      - name: Install signing certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.SIGNING_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/signing.keychain-db
+          CERT_PATH=$RUNNER_TEMP/certificate.p12
+
+          echo "$CERTIFICATE_P12" | base64 --decode > "$CERT_PATH"
+
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -project Claudette.xcodeproj \
+            -scheme Claudette \
+            -resolvePackageDependencies
+
+      - name: Archive
+        run: |
+          xcodebuild -project Claudette.xcodeproj \
+            -scheme Claudette \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath /tmp/Claudette.xcarchive \
+            archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }} \
+            DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
+            SWIFT_STRICT_CONCURRENCY=minimal
+
+      - name: Create export options
+        run: |
+          cat > /tmp/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><true/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export & upload to TestFlight
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath /tmp/Claudette.xcarchive \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportPath /tmp/ClaudetteExport \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf /tmp/Claudette.xcarchive /tmp/ClaudetteExport /tmp/ExportOptions.plist
+          rm -rf ~/private_keys
+          security delete-keychain $RUNNER_TEMP/signing.keychain-db 2>/dev/null || true

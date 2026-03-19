@@ -2,8 +2,11 @@ import SwiftUI
 
 struct ProfileListView: View {
     @ObservedObject var viewModel: ProfileListViewModel
+    @ObservedObject var appIconManager: AppIconManager
     let onSelectProfile: (ServerProfile) -> Void
     let onEditProfile: (ServerProfile?) -> Void
+
+    @State private var showingSettings = false
 
     var body: some View {
         Group {
@@ -15,11 +18,19 @@ struct ProfileListView: View {
         }
         .navigationTitle("Claudette")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: { showingSettings = true }) {
+                    Image(systemName: "gearshape")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { onEditProfile(nil) }) {
                     Image(systemName: "plus")
                 }
             }
+        }
+        .sheet(isPresented: $showingSettings) {
+            AppSettingsView(appIconManager: appIconManager)
         }
         .onAppear {
             viewModel.loadProfiles()
