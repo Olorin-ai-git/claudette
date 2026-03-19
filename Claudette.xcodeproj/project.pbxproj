@@ -87,6 +87,7 @@
 		H10000010000000000000007 /* AppIcon-Echo-60x60.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000007 /* AppIcon-Echo-60x60.png */; };
 		H10000010000000000000008 /* AppIcon-Echo-58x58.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000008 /* AppIcon-Echo-58x58.png */; };
 		H10000010000000000000009 /* AppIcon-Echo-40x40.png in Resources */ = {isa = PBXBuildFile; fileRef = H10000020000000000000009 /* AppIcon-Echo-40x40.png */; };
+		V10000010000000000000001 /* echo_promo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = V10000020000000000000001 /* echo_promo.mp4 */; };
 		T10000010000000000000001 /* TerminalBlockDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000001 /* TerminalBlockDetectorTests.swift */; };
 		T10000010000000000000002 /* TmuxSessionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000002 /* TmuxSessionServiceTests.swift */; };
 		T10000010000000000000003 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T10000020000000000000003 /* ModelTests.swift */; };
@@ -183,6 +184,7 @@
 		T10000020000000000000005 /* WakeOnLANServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeOnLANServiceTests.swift; sourceTree = "<group>"; };
 		T10000020000000000000006 /* UIColorHexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColorHexTests.swift; sourceTree = "<group>"; };
 		T10000020000000000000010 /* ClaudetteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudetteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		V10000020000000000000001 /* echo_promo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = echo_promo.mp4; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -400,6 +402,7 @@
 			isa = PBXGroup;
 			children = (
 				F1000002000000000000001D /* DefaultSnippets.json */,
+				V10000020000000000000001 /* echo_promo.mp4 */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -504,6 +507,7 @@
 				H10000010000000000000007 /* AppIcon-Echo-60x60.png in Resources */,
 				H10000010000000000000008 /* AppIcon-Echo-58x58.png in Resources */,
 				H10000010000000000000009 /* AppIcon-Echo-40x40.png in Resources */,
+				V10000010000000000000001 /* echo_promo.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

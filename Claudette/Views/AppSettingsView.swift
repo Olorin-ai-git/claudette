@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 
 struct AppSettingsView: View {
     @ObservedObject var appIconManager: AppIconManager
@@ -7,6 +8,12 @@ struct AppSettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    EchoPromoVideoView()
+                        .frame(height: 240)
+                        .listRowInsets(EdgeInsets())
+                }
+
                 Section("App Icon") {
                     iconRow(tier: .free, label: "Default", imageName: nil)
                     iconRow(tier: .echo, label: "Claudette Echo", imageName: "AppIcon-Echo-60x60")
@@ -65,5 +72,43 @@ struct AppSettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+struct EchoPromoVideoView: View {
+    @State private var player: AVPlayer?
+
+    var body: some View {
+        Group {
+            if let player {
+                VideoPlayer(player: player)
+                    .disabled(true)
+            } else {
+                Rectangle()
+                    .fill(Color(.systemGroupedBackground))
+                    .overlay {
+                        ProgressView()
+                    }
+            }
+        }
+        .onAppear {
+            guard let url = Bundle.main.url(forResource: "echo_promo", withExtension: "mp4") else { return }
+            let avPlayer = AVPlayer(url: url)
+            avPlayer.isMuted = true
+            avPlayer.play()
+            NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemDidPlayToEndTime,
+                object: avPlayer.currentItem,
+                queue: .main
+            ) { _ in
+                avPlayer.seek(to: .zero)
+                avPlayer.play()
+            }
+            player = avPlayer
+        }
+        .onDisappear {
+            player?.pause()
+            player = nil
+        }
     }
 }
