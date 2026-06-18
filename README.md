@@ -1,3 +1,5 @@
+> ⚠️ **ARCHIVED / DEPRECATED (2026-06-18).** Claudette development has been consolidated into Olorin's internal monorepo. This repository is frozen — iOS source as of 2026-03-19, strategy docs as of 2026-06-18 — and is read-only and unmaintained. Please do not open issues or PRs here.
+
 # Claudette
 
 The mobile workstation for Claude Code. 35+ power tools, raw terminal access, zero abstraction.
