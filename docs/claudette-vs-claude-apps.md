@@ -54,7 +54,7 @@ connects from your phone to your Mac and runs Claude Code there:
 - **No cloud, no accounts, no backend.** SSH goes directly device → Mac, or via
   the optional Olorin Relay WebSocket bridge for off-LAN access.
 - iOS app is Swift/SwiftUI (MVVM + service layer; ~90 files, 19+ services).
-- A companion TypeScript CLI (`npx claudette setup`) automates Mac prep and
+- A companion TypeScript CLI (`npx claudette-setup`) automates Mac prep and
   QR-code pairing.
 - Android lives in a separate repo.
 
@@ -165,7 +165,7 @@ clearly on **real push notifications**, which Claudette lacks as a managed servi
 | Wake-on-LAN | ✅ Wake your Mac before connecting | ❌ |
 | SFTP file browser + remote editor | ✅ Browse/edit any remote file over SFTP | ⚠️ Edit via Claude/diff view; cloud has no access to local FS |
 | Host-key TOFU pinning | ✅ Trust-on-first-use, warns on change | n/a (TLS to Anthropic) |
-| QR pairing | ✅ `npx claudette setup` QR | ✅ Remote Control shows a QR to open the session |
+| QR pairing | ✅ `npx claudette-setup` QR | ✅ Remote Control shows a QR to open the session |
 | Zero setup on the machine | ❌ Needs SSH + tmux on the Mac | ✅ Cloud needs nothing local; Remote Control needs only the CLI |
 | Repos you haven't cloned / cloud parallelism | ❌ | ✅ Claude Code on the web clones from GitHub and runs N tasks in parallel |
 
