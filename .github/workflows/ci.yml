@@ -20,6 +20,9 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
+      - name: Install iOS Simulator runtime
+        run: xcodebuild -downloadPlatform iOS
+
       - name: Resolve Swift packages
         run: |
           xcodebuild -project Claudette.xcodeproj \
@@ -31,7 +34,7 @@ jobs:
           xcodebuild -project Claudette.xcodeproj \
             -scheme Claudette \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -skipPackagePluginValidation \
             SWIFT_STRICT_CONCURRENCY=minimal \
             test
