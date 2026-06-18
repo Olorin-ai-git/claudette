@@ -27,6 +27,18 @@ from the Claude app into a real shell, and one click back to the agent.
 session was subscribed to #5 activity; webhooks deliver CI *failures* and review
 comments but **not** CI success — so success must be checked manually.
 
+**iOS CI fixes applied on this branch (unverified until CI re-runs):**
+- **SwiftTerm pin:** `exactVersion 1.10.1` → `1.11.0` → now **`upToNextMajor >= 1.11.2`**.
+  1.10.1 had a `Package.swift` manifest bug (broke dependency resolution); 1.11.0 had
+  an iOS compile error in `TerminalView` SendData key handling (Codex P1, fixed in
+  1.11.1/PR #473). Moving off `exactVersion` lets Xcode select patched releases.
+  Updated `project.pbxproj` + `Package.resolved` (rev `b1262db…`, v1.11.2).
+- **`ci.yml`:** the `macos-15`/Xcode 16 runner lacked the iOS 18 simulator runtime,
+  so xcodebuild failed at destination resolution (`iOS 18.0 is not installed`) before
+  compiling. Added an `xcodebuild -downloadPlatform iOS` step and dropped the brittle
+  `OS=latest` pin (`-destination 'platform=iOS Simulator,name=iPhone 16'`).
+  **Both fixes are best-effort and unverified — no Xcode here; watch the next CI run.**
+
 ---
 
 ## 3. Deliverables (all under `docs/`)
@@ -104,8 +116,9 @@ Full inventory in `moat-alignment-plan.md` Appendix A. Highlights:
   `TerminalBlockDetector.swift:12-22`) — brittle; replace with the sidecar behind a
   flag, keep scraping as fallback.
 - **Tests:** exist for parsers/tmux/WoL/models; **none** for SSH/SFTP/settings/
-  discovery. **No CI config in the app** beyond the GH Actions build (the iOS build
-  was failing on a SwiftTerm 1.10.1 manifest bug — **fixed to 1.11.0 on `main`**).
+  discovery. CI is `.github/workflows/ci.yml` (iOS build+test on macos-15; CLI on
+  ubuntu). See §2 for the iOS CI fixes applied on this branch (SwiftTerm version
+  range + simulator-runtime install) — verify they hold on the next run.
 
 ---
 
