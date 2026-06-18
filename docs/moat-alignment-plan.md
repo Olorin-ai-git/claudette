@@ -82,14 +82,17 @@ real, safe pause using a hook (hooks already install via SFTP to
 
 ### 3.3 Take the wheel — one click
 
-1. **Trigger.** We don't control the Claude app UI, so the tap originates from an
-   artifact the agent emits (all installable by `claudette-setup`):
-   - a **`Stop`/`Notification` hook** that, when the agent pauses or asks a
-     question, surfaces a `claudette://take-wheel?...` deep link (via the local
-     notification path — `PermissionNotificationService.swift` — and/or a printed
-     OSC-8 terminal hyperlink), **or**
-   - a **`/wheel` custom slash command** the user runs in the Claude app that writes
-     the handoff descriptor and emits the same link.
+1. **Trigger** *(decided: push primary, `/wheel` fallback)*. We don't control the
+   Claude app UI, so the tap originates from an artifact the agent emits (all
+   installable by `claudette-setup`):
+   - **Primary — push/notification deep link:** a **`Stop`/`Notification` hook**
+     fires a native push ("Claude is blocked — take the wheel?") carrying the
+     `claudette://take-wheel?...` link; tapping the push opens Claudette into the
+     shell. (Depends on the push sidecar, WS5 — lands Phase 2.)
+   - **Fallback — `/wheel` custom slash command:** the user runs `/wheel` in the
+     Claude app, which writes the handoff descriptor and emits the same link. Ships
+     in Phase 1 as the MVP trigger, before push is ready, and remains available
+     after.
 2. **Deep link payload** (signed; see §6):
    ```
    claudette://take-wheel?host=<id>&user=<u>&cwd=<path>&tmux=<session>&sid=<claude_session_id>&sig=<hmac>
@@ -193,10 +196,13 @@ is **no remote tail/stream** (`RemoteFileBrowserService.readFile` loads whole fi
 
 The CLI already does environment prep + QR pairing (`cli/`). Add:
 
-- **tmux-wrap Claude:** configure the user's launch so agent sessions run in a
-  deterministic tmux session (`claudette-<repo>`), enabling co-location. (Today
-  `tmuxEnabled` defaults **false** — `Configuration.plist` SessionPersistence; flip
-  the recommended path on.)
+- **tmux-wrap Claude (decided: enforced by default):** `claudette-setup` configures
+  the user's launch so agent sessions run in a deterministic tmux session
+  (`claudette-<repo>`) **by default**, enabling co-location — take-the-wheel can't
+  work reliably otherwise. (Today `tmuxEnabled` defaults **false** in
+  `Configuration.plist` SessionPersistence and in the app config; the setup flow and
+  the app's recommended path both flip to on, with an escape hatch for users who
+  decline.)
 - **Install hooks:** the wheel-gate PreToolUse hook, the event-emitter hooks, and
   the `/wheel` command + deep-link emitter.
 - **Register associated domain** content and print the `claudette://`/universal-link
@@ -263,17 +269,15 @@ green CI.
 
 ## 7. Open questions / decisions needed
 
-1. **Trigger surface for "take the wheel" from the Claude app.** We can't add a
-   button to Anthropic's app. Preferred path: a **push/notification deep link**
-   emitted by a Stop/Notification hook when the agent blocks. Acceptable fallback: a
-   `/wheel` slash command the user runs. Confirm which is the headline UX.
-2. **tmux-always?** Co-location needs the agent in tmux. Do we make
-   `claudette-setup` enforce tmux-wrapped Claude as the default (recommended), or
-   keep it opt-in?
-3. **Universal-link domain** — which domain hosts the AASA file
+1. ~~**Trigger surface.**~~ **Decided:** push/notification deep link is the headline
+   UX (Phase 2); the `/wheel` slash command ships first as the Phase 1 MVP trigger
+   and remains as a fallback.
+2. ~~**tmux-always?**~~ **Decided:** `claudette-setup` enforces tmux-wrapped Claude
+   by default (with an opt-out), since co-location requires it.
+3. **Universal-link domain** *(open)* — which domain hosts the AASA file
    (claudettemobile.com?).
-4. **Cloud sessions** — confirm we show the "teleport to your Mac first" affordance
-   rather than trying to support take-the-wheel on cloud.
+4. **Cloud sessions** *(open)* — confirm we show the "teleport to your Mac first"
+   affordance rather than trying to support take-the-wheel on cloud.
 
 ---
 
