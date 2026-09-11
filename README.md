@@ -20,6 +20,13 @@ Claudette lets you drive your Claude Code session from iOS, Android, and Apple T
 - **Zero-config remote** — Instant Connect / QR pairing; Relay when you’re off LAN
 - **$4.99 once for Pro** — no subscription; your Anthropic key/token stays yours
 
+
+## Demo
+
+![Take the wheel — same session](./assets/take-the-wheel-15s.gif)
+
+*15s silent loop — agent blocked → take the wheel → hand back. [MP4](./assets/take-the-wheel-15s.mp4)*
+
 ## Quick start
 
 1. Install the app ([App Store](https://apps.apple.com/us/app/claudette-mobile/id6759467788) or [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette))
