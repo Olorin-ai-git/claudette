@@ -21,6 +21,18 @@ Claudette lets you drive your Claude Code session from iOS, Android, and Apple T
 - **$4.99 once for Pro** — no subscription; your Anthropic key/token stays yours
 
 
+## Claudette vs Termius / Blink vs chat remotes
+
+| Need | Termius / Blink / plain SSH | Chat remotes (Happy, Remote Control, etc.) | **Claudette** |
+| --- | --- | --- | --- |
+| Raw shell on phone | Yes | No / limited | **Yes** — full PTY + extended keyboard |
+| See inside the agent session (context, cost, agent tree) | No | Partial (chat-shaped) | **Yes** — built for the live session |
+| Human ↔ agent handoff in *one* session | No | No raw shell to hand off to | **Take the Wheel** — intervene, then hand back |
+| Your machine, your keys, your local tools | Yes (dumb pipe) | Often via product cloud / subscription path | **SSH / Relay / Tailscale** + Instant Connect option |
+| Price | Often subscription | Bundled with Claude plan or SaaS | **Free + $4.99 one-time Pro** |
+
+**One line:** Termius gives you a shell without agent awareness. Chat remotes give you the agent without a real `$`. Claudette is the mobile **control plane** — both in one session.
+
 ## Quick start
 
 1. Install the app ([App Store](https://apps.apple.com/us/app/claudette-mobile/id6759467788) or [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette))
@@ -41,18 +53,6 @@ npx claudette register       # relay registration only
 
 Requires Node 18+.
 
-
-## Claudette vs Termius / Blink vs chat remotes
-
-| Need | Termius / Blink / plain SSH | Chat remotes (Happy, Remote Control, etc.) | **Claudette** |
-| --- | --- | --- | --- |
-| Raw shell on phone | Yes | No / limited | **Yes** — full PTY + extended keyboard |
-| See inside the agent session (context, cost, agent tree) | No | Partial (chat-shaped) | **Yes** — built for the live session |
-| Human ↔ agent handoff in *one* session | No | No raw shell to hand off to | **Take the Wheel** — intervene, then hand back |
-| Your machine, your keys, your local tools | Yes (dumb pipe) | Often via product cloud / subscription path | **SSH / Relay / Tailscale** + Instant Connect option |
-| Price | Often subscription | Bundled with Claude plan or SaaS | **Free + $4.99 one-time Pro** |
-
-**One line:** Termius gives you a shell without agent awareness. Chat remotes give you the agent without a real `$`. Claudette is the mobile **control plane** — both in one session.
 
 ## Elsewhere
 
