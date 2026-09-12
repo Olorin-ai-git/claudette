@@ -41,6 +41,12 @@ npx claudette register       # relay registration only
 
 Requires Node 18+.
 
+
+## Elsewhere
+
+- **Dev.to:** [Claudette: a mobile control plane for your AI coding agent](https://dev.to/gil_klainert_b0aa996bee02/claudette-a-mobile-control-plane-for-your-ai-coding-agent-real-shell-session-ui-2cm9)
+- **X:** [@olorin_ai](https://x.com/olorin_ai/status/2098532084876804418)
+
 ## Feedback & issues
 
 Product bugs, setup friction, and feature requests: **open an issue in this repo**.
