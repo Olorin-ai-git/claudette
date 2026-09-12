@@ -1,12 +1,12 @@
 # Claudette
 
-**The mobile workstation for Claude Code.**
+**The mobile control plane for your AI coding agent.**
 
-Claudette lets you drive your Claude Code session from iOS, Android, and Apple TV — with live context usage, agent tree, voice I/O, and a full power terminal — over SSH or Olorin Relay.
+Claudette is a native iOS / Android / Apple TV app that attaches to *your* machine (SSH, Relay, or Instant Connect) and adds live context usage, agent tree, voice I/O, and a full power terminal — including Take the Wheel handoff. Works with CLI coding agents you install yourself (including Claude Code).
 
 | | |
 |---|---|
-| **iOS** | [App Store](https://apps.apple.com/us/app/claudette-mobile/id6759467788) |
+| **iOS** | [App Store](https://apps.apple.com/us/app/claudette-echo/id6759467788) |
 | **Android** | [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette) |
 | **CLI** | `npx claudette setup` |
 | **Site** | [claudettemobile.com](https://claudettemobile.com) |
@@ -35,7 +35,7 @@ Claudette lets you drive your Claude Code session from iOS, Android, and Apple T
 
 ## Quick start
 
-1. Install the app ([App Store](https://apps.apple.com/us/app/claudette-mobile/id6759467788) or [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette))
+1. Install the app ([App Store](https://apps.apple.com/us/app/claudette-echo/id6759467788) or [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette))
 2. On your Mac/PC: `npx claudette setup`
 3. Open Claudette → Connect → scan the QR / finish pairing → done
 
