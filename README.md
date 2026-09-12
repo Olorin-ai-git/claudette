@@ -16,6 +16,7 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 ## Why install it
 
 - **See inside the session** — context gauge, token history, agent tree (not just a dumb SSH pipe)
+- **Real shell** — full PTY + extended keyboard; Take the Wheel when *you* choose to steer mid-session
 - **Voice-native** — dictate prompts; hear summaries when the agent finishes
 - **Zero-config remote** — Instant Connect / QR pairing; Relay when you’re off LAN
 - **$4.99 once for Pro** — no subscription; your Anthropic key/token stays yours
@@ -27,11 +28,11 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 | --- | --- | --- | --- |
 | Raw shell on phone | Yes | No / limited | **Yes** — full PTY + extended keyboard |
 | See inside the agent session (context, cost, agent tree) | No | Partial (chat-shaped) | **Yes** — built for the live session |
-| Human ↔ agent handoff in *one* session | No | No raw shell to hand off to | **Take the Wheel** — intervene, then hand back |
+| Human ↔ agent handoff in *one* session | No | No raw shell to hand off to | **Take the Wheel** — drop into the live PTY when *you* choose, then hand back |
 | Your machine, your keys, your local tools | Yes (dumb pipe) | Often via product cloud / subscription path | **SSH / Relay / Tailscale** + Instant Connect option |
 | Price | Often subscription | Bundled with Claude plan or SaaS | **Free + $4.99 one-time Pro** |
 
-**One line:** Termius gives you a shell without agent awareness. Chat remotes give you the agent without a real `$`. Claudette is the mobile **control plane** — both in one session.
+**One line:** Termius gives you a shell without agent awareness. Chat remotes give you the agent without a real `$`. Claudette is the mobile **control plane** — see inside the session *and* type in a real `$`.
 
 ## Quick start
 
