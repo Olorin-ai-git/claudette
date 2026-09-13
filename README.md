@@ -13,6 +13,13 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 
 > **This repo is the public front door.** Active development lives in Olorin’s private monorepo (`olorin`, under `Claudette/`). The historical iOS tree still in this repository is a frozen snapshot — do not treat it as the live app source.
 
+
+## Demo
+
+![Claudette — see inside the session, type in a real shell](./assets/p0-hero-live.gif)
+
+*Live session on your machine — context gauge, agent tree, and Take the Wheel when you choose. Control plane, not a chat remote.*
+
 ## Why install it
 
 - **See inside the session** — context gauge, token history, agent tree (not just a dumb SSH pipe)
