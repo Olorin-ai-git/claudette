@@ -24,9 +24,9 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 
 - **See inside the session** — context gauge, token history, agent tree (not just a dumb SSH pipe)
 - **Real shell** — full PTY + extended keyboard; Take the Wheel when *you* choose to steer mid-session
-- **Voice-native** — dictate prompts; hear summaries when the agent finishes
+- **Voice (Pro)** — dictate prompts; hear summaries when the agent finishes
 - **Zero-config remote** — Instant Connect / QR pairing; Relay when you’re off LAN
-- **$4.99 once for Pro** — no subscription; your Anthropic key/token stays yours
+- **$4.99 once for Pro** — free download; Pro is an in-app one-time unlock (no subscription); your Anthropic key/token stays yours
 
 
 ## Claudette vs Termius / Blink vs chat remotes
@@ -72,6 +72,10 @@ Requires Node 18+.
 Product bugs, setup friction, and feature requests: **open an issue in this repo**.
 
 PRs that improve this front-door docs surface are welcome. App/CLI source changes land in the private monorepo — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## License
+
+This front-door repo (docs, frozen snapshot, and companion CLI packaging) is [MIT](./LICENSE). The live Claudette mobile app is source-available under BUSL 1.1. See [claudettemobile.com/security](https://claudettemobile.com/security) for the independence and license disclosure.
 
 ## Not affiliated with Anthropic
 
