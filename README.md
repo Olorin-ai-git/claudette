@@ -24,7 +24,7 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 
 - **See inside the session** — context gauge, token history, agent tree (not just a dumb SSH pipe)
 - **Real shell** — full PTY + extended keyboard; Take the Wheel when *you* choose to steer mid-session
-- **Voice** — dictate prompts; hear summaries when the agent finishes (system TTS on Free; ElevenLabs voice on Pro)
+- **Voice (Pro)** — ElevenLabs voice; Free keeps system TTS for summaries
 - **Zero-config remote** — Instant Connect / QR pairing; Relay when you’re off LAN
 - **$4.99 once for Pro** — unlocks Relay + Instant Connect capacity + ElevenLabs voice; free download keeps the full control plane (PTY, gauge, tree, Take the Wheel) + system TTS. No subscription.
 
