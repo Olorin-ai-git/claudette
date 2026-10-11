@@ -7,7 +7,7 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 | | |
 |---|---|
 | **iOS** | [App Store](https://apps.apple.com/us/app/claudette-echo/id6759467788) |
-| **Android** | [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette) |
+| **Android** | Google Play: coming soon |
 | **CLI** | `npx claudette setup` |
 | **Site** | [claudettemobile.com](https://claudettemobile.com) |
 
@@ -43,7 +43,7 @@ Claudette is a native iOS / Android / Apple TV app that attaches to *your* machi
 
 ## Quick start
 
-1. Install the app ([App Store](https://apps.apple.com/us/app/claudette-echo/id6759467788) or [Google Play](https://play.google.com/store/apps/details?id=com.olorin.claudette))
+1. Install the app ([App Store](https://apps.apple.com/us/app/claudette-echo/id6759467788); Android on Google Play is coming soon)
 2. On your Mac/PC: `npx claudette setup`
 3. Open Claudette → Connect → scan the QR / finish pairing → done
 
@@ -80,3 +80,7 @@ This front-door repo (docs, frozen snapshot, and companion CLI packaging) is [MI
 ## Not affiliated with Anthropic
 
 Claudette is an independent Olorin product. Claude / Claude Code are trademarks of Anthropic PBC, used only to describe compatibility.
+
+---
+
+**Built by [Gil Klainert](https://github.com/gilco1973)** · [klainert.com](https://klainert.com) · part of the [Olorin](https://github.com/Olorin-ai-git) ecosystem
